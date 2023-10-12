@@ -16,19 +16,24 @@ internal class Program
         var cacheDec = new DistributedCacheRepositoryDecorator(rep,
             new MemoryDistributedCache(new OptionsWrapper<MemoryDistributedCacheOptions>(new())), ms);
 
-        await cacheDec.Create(new Entry()
-        {
-            Text = "test",
-            Data = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }
-        });
+        await FeelSeedData(cacheDec);
+        var dataCount = Seed.DataCount;
 
-        for (int i = 0; i < 500; i++)
+        var requestsCount = dataCount * 10;
+        for (int i = 0; i < requestsCount; i++)
         {
-            var entry = cacheDec.Get(1);
-            await Task.Delay(10);
+            var randomId = Random.Shared.Next(1, dataCount);
+            var entry = cacheDec.Get(randomId);
         }
 
         var mc = new MetricsCalc(ms.GetAll());
-        System.Console.WriteLine($"{mc.GetQueryAcceleration()}; {mc.GetHitRate()}; {mc.GetRps()}");
+        System.Console.WriteLine($"Acc: {mc.GetQueryAcceleration():.##} %; HR: {mc.GetHitRate()}; RPS: {mc.GetRps()}");
+    }
+
+    static async Task FeelSeedData(IRepository repository)
+    {
+        var entries = Seed.GetData();
+        foreach (var entry in entries)
+            await repository.Create(entry);
     }
 }

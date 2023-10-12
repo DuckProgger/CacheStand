@@ -14,6 +14,7 @@ public class MetricsCalc
         var averageCacheMissQueryTime = GetAverageCacheMissQueryTime();
         var averageCacheHitQueryTime = GetAverageCacheHitQueryTime();
         return (averageCacheMissQueryTime - averageCacheHitQueryTime) / averageCacheMissQueryTime * 100.0;
+        //return averageCacheHitQueryTime / (averageCacheMissQueryTime + averageCacheHitQueryTime) * 100.0;
     }
 
     public double GetHitRate()
@@ -35,9 +36,9 @@ public class MetricsCalc
     {
         var cacheMissMetricsTicks = metricList
             .Where(x => !x.CacheHit)
-            .Select(x => x.RequestTime.Ticks)
-            .Sum();
-        return new TimeSpan(cacheMissMetricsTicks);
+            .Select(x => x.RequestTime.Ticks - x.CacheCosts.Ticks)
+            .Average();
+        return new TimeSpan((int)cacheMissMetricsTicks);
     }
 
     private TimeSpan GetAverageCacheHitQueryTime()
@@ -45,7 +46,7 @@ public class MetricsCalc
         var cacheHitMetricsTicks = metricList
             .Where(x => x.CacheHit)
             .Select(x => x.RequestTime.Ticks)
-            .Sum();
-        return new TimeSpan(cacheHitMetricsTicks);
+            .Average();
+        return new TimeSpan((int)cacheHitMetricsTicks);
     }
 }

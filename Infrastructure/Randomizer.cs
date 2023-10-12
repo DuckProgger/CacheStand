@@ -1,6 +1,6 @@
 ﻿namespace Infrastructure;
 
-public static class Randomizer
+internal static class Randomizer
 {
     private static readonly Random random = Random.Shared;
     private const int startCharIndex = 'A';
@@ -26,5 +26,10 @@ public static class Randomizer
         var buffer = new byte[length];
         random.NextBytes(buffer);
         return buffer;
+    }
+
+    public static byte[] GetRandomBytes(int maxLength)
+    {
+        return GetRandomBytes(0, maxLength);
     }
 }
