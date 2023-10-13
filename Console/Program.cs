@@ -1,5 +1,6 @@
 ﻿using Core.Data;
 using Core.Metric;
+using Core.Services;
 using Infrastructure;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
@@ -11,23 +12,33 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        var ms = new MetricsStorage();
-        var rep = new InMemoryRepository();
-        var cacheDec = new DistributedCacheRepositoryDecorator(rep,
-            new MemoryDistributedCache(new OptionsWrapper<MemoryDistributedCacheOptions>(new())), ms);
+        var metrics = new Metrics();
+        var metricsStorage = new MetricsStorage();
+        var inMemoryRepository = new InMemoryRepository();
+        var cache = new MemoryDistributedCache(new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())); 
+        var cacheWrapper = new DistributedCacheWrapper(cache);
+        var cacheWrapperDecorator = new DistributedCacheWrapperDecorator(cacheWrapper, metrics);
+        var repositoryDecoratorInner = new DistributedCacheRepositoryDecorator(inMemoryRepository, cacheWrapperDecorator);
+        var repositoryDecoratorOuter = new RequestTimeMeasurmentRepositoryDecorator(repositoryDecoratorInner, metrics);
 
-        await FeelSeedData(cacheDec);
+        await FeelSeedData(repositoryDecoratorInner);
         var dataCount = Seed.DataCount;
-
         var requestsCount = dataCount * 10;
         for (int i = 0; i < requestsCount; i++)
         {
             var randomId = Random.Shared.Next(1, dataCount);
-            var entry = cacheDec.Get(randomId);
+            var entry = await repositoryDecoratorOuter.Get(randomId);
+            metricsStorage.Add(metrics with {});
+            metrics.Clear();
         }
 
-        var mc = new MetricsCalc(ms.GetAll());
-        System.Console.WriteLine($"Acc: {mc.GetQueryAcceleration():.##} %; HR: {mc.GetHitRate()}; RPS: {mc.GetRps()}");
+        var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
+        ShowResults(metricsCalc);
+    }
+
+    private static void ShowResults(MetricsCalc metricsCalc)
+    {
+        System.Console.WriteLine($"Acc: {metricsCalc.GetQueryAcceleration():.##} %; HR: {metricsCalc.GetHitRate()}; RPS: {metricsCalc.GetRps()}");
     }
 
     static async Task FeelSeedData(IRepository repository)

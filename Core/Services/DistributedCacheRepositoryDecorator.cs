@@ -1,61 +1,26 @@
-﻿using System.Diagnostics;
-using Core.Data;
-using Core.Metric;
-using Microsoft.Extensions.Caching.Distributed;
-using Newtonsoft.Json;
+﻿using Core.Data;
 
 namespace Core.Services;
 
 public class DistributedCacheRepositoryDecorator : IRepository
 {
     private readonly IRepository repository;
-    private readonly IDistributedCache cache;
-    private readonly MetricsStorage metricsStorage;
+    private readonly IDistributedCacheWrapper cacheWrapper;
 
     public DistributedCacheRepositoryDecorator(IRepository repository,
-        IDistributedCache cache,
-        MetricsStorage metricsStorage)
+        IDistributedCacheWrapper cacheWrapper)
     {
         this.repository = repository;
-        this.cache = cache;
-        this.metricsStorage = metricsStorage;
+        this.cacheWrapper = cacheWrapper;
     }
 
     public async Task<Entry?> Get(int id)
     {
-        var now = DateTime.Now;
-        var requestStopwatch = new Stopwatch();
-        requestStopwatch.Start();
-
-        var cacheStopwatch = new Stopwatch();
-        cacheStopwatch.Start();
-
-        var entryStrFromCache = await cache.GetStringAsync(id.ToString());
-
-        if (entryStrFromCache is null)
-        {
-            cacheStopwatch.Stop();
-
-            var entry = await repository.Get(id);
-
-            cacheStopwatch.Start();
-            var serializedEntry = JsonConvert.SerializeObject(entry);
-            await cache.SetStringAsync(entry.Id.ToString(), serializedEntry);
-            cacheStopwatch.Stop();
-            
-            requestStopwatch.Stop();
-            metricsStorage.Add(new Metrics(requestStopwatch.ElapsedTicks, cacheStopwatch.ElapsedTicks, false, now));
-
-            return entry;
-        }
-
-        var entryFromCache = JsonConvert.DeserializeObject<Entry>(entryStrFromCache)!;
-
-        cacheStopwatch.Stop();
-        requestStopwatch.Stop();
-        metricsStorage.Add(new Metrics(requestStopwatch.ElapsedTicks, cacheStopwatch.ElapsedTicks, true, now));
-
-        return entryFromCache;
+        var entryFromCache = await cacheWrapper.GetValueAsync<Entry>(id.ToString());
+        if (entryFromCache is not null) return entryFromCache;
+        var entry = await repository.Get(id);
+        await cacheWrapper.SetValueAsync(entry.Id.ToString(), entry);
+        return entry;
     }
 
     public async Task<Entry> Create(Entry entry)
