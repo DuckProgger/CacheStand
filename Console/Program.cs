@@ -17,17 +17,17 @@ internal class Program
         var inMemoryRepository = new InMemoryRepository();
         var cache = new MemoryDistributedCache(new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())); 
         var cacheWrapper = new DistributedCacheWrapper(cache);
-        var cacheWrapperDecorator = new DistributedCacheWrapperDecorator(cacheWrapper, metrics);
-        var repositoryDecoratorInner = new DistributedCacheRepositoryDecorator(inMemoryRepository, cacheWrapperDecorator);
-        var repositoryDecoratorOuter = new RequestTimeMeasurmentRepositoryDecorator(repositoryDecoratorInner, metrics);
+        var cacheWrapperProxy = new DistributedCacheWrapperProxy(cacheWrapper, metrics);
+        var repositoryProxyInner = new DistributedCacheRepositoryProxy(inMemoryRepository, cacheWrapperProxy);
+        var repositoryProxyOuter = new RequestTimeMeasurmentRepositoryProxy(repositoryProxyInner, metrics);
 
-        await FeelSeedData(repositoryDecoratorInner);
+        await FeelSeedData(repositoryProxyInner);
         var dataCount = Seed.DataCount;
         var requestsCount = dataCount * 10;
         for (int i = 0; i < requestsCount; i++)
         {
             var randomId = Random.Shared.Next(1, dataCount);
-            var entry = await repositoryDecoratorOuter.Get(randomId);
+            var entry = await repositoryProxyOuter.Get(randomId);
             metricsStorage.Add(metrics with {});
             metrics.Clear();
         }

@@ -4,12 +4,12 @@ using Core.Utils;
 
 namespace Core.Services;
 
-public class RequestTimeMeasurmentRepositoryDecorator : IRepository
+public class RequestTimeMeasurmentRepositoryProxy : IRepository
 {
     private readonly IRepository repository;
     private readonly Metrics metrics;
 
-    public RequestTimeMeasurmentRepositoryDecorator(IRepository repository, Metrics metrics)
+    public RequestTimeMeasurmentRepositoryProxy(IRepository repository, Metrics metrics)
     {
         this.repository = repository;
         this.metrics = metrics;

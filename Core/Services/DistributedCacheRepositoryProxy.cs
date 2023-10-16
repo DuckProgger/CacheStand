@@ -2,12 +2,12 @@
 
 namespace Core.Services;
 
-public class DistributedCacheRepositoryDecorator : IRepository
+public class DistributedCacheRepositoryProxy : IRepository
 {
     private readonly IRepository repository;
     private readonly IDistributedCacheWrapper cacheWrapper;
 
-    public DistributedCacheRepositoryDecorator(IRepository repository,
+    public DistributedCacheRepositoryProxy(IRepository repository,
         IDistributedCacheWrapper cacheWrapper)
     {
         this.repository = repository;

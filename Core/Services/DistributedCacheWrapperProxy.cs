@@ -4,12 +4,12 @@ using Core.Utils;
 
 namespace Core.Services;
 
-public class DistributedCacheWrapperDecorator : IDistributedCacheWrapper
+public class DistributedCacheWrapperProxy : IDistributedCacheWrapper
 {
     private readonly IDistributedCacheWrapper cacheWrapper;
     private readonly Metrics metrics;
 
-    public DistributedCacheWrapperDecorator(IDistributedCacheWrapper cacheWrapper, Metrics metrics)
+    public DistributedCacheWrapperProxy(IDistributedCacheWrapper cacheWrapper, Metrics metrics)
     {
         this.cacheWrapper = cacheWrapper;
         this.metrics = metrics;
