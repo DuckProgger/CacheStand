@@ -26,11 +26,19 @@ public class RequestTimeMeasurmentRepositoryProxy : IRepository
 
     public async Task<Entry> Create(Entry entry)
     {
-        return await repository.Create(entry);
+        metrics.Timestamp = DateTime.Now;
+        using var profiler = new Profiler();
+        var createdEntry = await repository.Create(entry);
+        metrics.RequestTime = profiler.ElapsedTime;
+        return createdEntry;
     }
 
     public async Task<Entry> Update(Entry entry)
     {
-        return await repository.Update(entry);
+        metrics.Timestamp = DateTime.Now;
+        using var profiler = new Profiler();
+        var updatedEntry = await repository.Update(entry);
+        metrics.RequestTime = profiler.ElapsedTime;
+        return updatedEntry;
     }
 }

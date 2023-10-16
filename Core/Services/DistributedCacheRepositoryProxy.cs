@@ -25,11 +25,15 @@ public class DistributedCacheRepositoryProxy : IRepository
 
     public async Task<Entry> Create(Entry entry)
     {
-        return await repository.Create(entry);
+        var createdEntry = await repository.Create(entry);
+        await cacheWrapper.SetValueAsync(entry.Id.ToString(), createdEntry);
+        return createdEntry;
     }
 
     public async Task<Entry> Update(Entry entry)
     {
-        return await repository.Update(entry);
+        var updatedEntry = await repository.Update(entry);
+        await cacheWrapper.SetValueAsync(entry.Id.ToString(), updatedEntry);
+        return updatedEntry;
     }
 }

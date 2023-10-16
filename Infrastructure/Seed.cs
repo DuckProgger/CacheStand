@@ -3,12 +3,12 @@
 namespace Infrastructure;
 public static class Seed
 {
-    public const int DataCount = 1000;
+    public const int DataCount = 10000;
     
-    private const int minStringLength = 100;
-    private const int maxStringLength = 1000;
-    private const int minBytesLength = 1000;
-    private const int maxBytesLength = 10000;
+    private const int minStringLength = 1000;
+    private const int maxStringLength = 10000;
+    private const int minBytesLength = 10000;
+    private const int maxBytesLength = 100000;
 
     public static IEnumerable<Entry> GetData()
     {

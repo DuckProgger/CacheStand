@@ -23,18 +23,18 @@ internal class Program
         var repositoryProxyInner = new DistributedCacheRepositoryProxy(inMemoryRepository, cacheWrapperProxy);
         var repositoryProxyOuter = new RequestTimeMeasurmentRepositoryProxy(repositoryProxyInner, metrics);
 
-        await FeelSeedData(repositoryProxyInner);
+        await FeelSeedData(inMemoryRepository);
         var dataCount = Seed.DataCount;
 
-        var sw = new Stopwatch();
         using var requestSimulationTimer = new SingleThreadTimer(async () =>
         {
-            var randomId = Random.Shared.Next(1, dataCount);
-            var entry = await repositoryProxyOuter.Get(randomId);
-            metricsStorage.Add(metrics with { });
-            metrics.Clear();
+            var updateOperation = Randomizer.GetProbableEvent(20);
+            if (updateOperation)
+                await UpdateOperation(dataCount, repositoryProxyOuter, metricsStorage, metrics);
+            else
+                await ReadOperation(dataCount, repositoryProxyOuter, metricsStorage, metrics);
         }, TimeSpan.FromMilliseconds(10));
-
+        
         using var presenterTimer = new SingleThreadTimer(() =>
         {
             var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
@@ -62,6 +62,30 @@ internal class Program
         //ShowResults(metricsCalc);
 
         System.Console.ReadKey();
+    }
+
+    private static async Task UpdateOperation(int dataCount, RequestTimeMeasurmentRepositoryProxy repositoryProxyOuter,
+        MetricsStorage metricsStorage, Metrics metrics)
+    {
+        var randomId = Random.Shared.Next(1, dataCount);
+        var newEntry = new Entry()
+        {
+            Id = randomId,
+            Data = Randomizer.GetRandomBytes(10000),
+            Text = Randomizer.GetRandomString(10000)
+        };
+        await repositoryProxyOuter.Update(newEntry);
+        metricsStorage.Add(metrics with { });
+        metrics.Clear();
+    }
+
+    private static async Task ReadOperation(int dataCount, RequestTimeMeasurmentRepositoryProxy repositoryProxyOuter,
+        MetricsStorage metricsStorage, Metrics metrics)
+    {
+        var randomId = Random.Shared.Next(1, dataCount);
+        var entry = await repositoryProxyOuter.Get(randomId);
+        metricsStorage.Add(metrics with { });
+        metrics.Clear();
     }
 
     private static void ShowResults(MetricsCalc metricsCalc)

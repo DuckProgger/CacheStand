@@ -21,8 +21,13 @@ public class InMemoryRepository : IRepository
         return Task.FromResult(entry);
     }
 
-    public async Task<Entry> Update(Entry entry)
+    public Task<Entry> Update(Entry entry)
     {
-        throw new NotImplementedException();
+        if(entries.ContainsKey(entry.Id))
+        {
+            entries[entry.Id] = entry;
+        }
+
+        return Task.FromResult(entry);
     }
 }
