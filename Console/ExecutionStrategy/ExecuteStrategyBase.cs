@@ -22,8 +22,17 @@ abstract class ExecuteStrategyBase : IExecuteStrategy
     }
 
     public abstract Task Invoke();
-
-    protected async Task UpdateOperation()
+    
+    protected async Task SimulateRequest()
+    {
+        var updateOperation = Randomizer.GetProbableEvent(options.UpdateOperationProbable);
+        if (updateOperation)
+            await UpdateOperation();
+        else
+            await ReadOperation();
+    }
+    
+    private async Task UpdateOperation()
     {
         var randomId = Random.Shared.Next(1, options.DataCount);
         var newEntry = new Entry()
@@ -37,14 +46,13 @@ abstract class ExecuteStrategyBase : IExecuteStrategy
         metrics.Clear();
     }
 
-    protected async Task ReadOperation()
+    private async Task ReadOperation()
     {
         var randomId = Random.Shared.Next(1, options.DataCount);
         var entry = await repository.Get(randomId);
         metricsStorage.Add(metrics with { });
         metrics.Clear();
     }
-
     protected static void ShowResults(MetricsCalc metricsCalc)
     {
         System.Console.Clear();

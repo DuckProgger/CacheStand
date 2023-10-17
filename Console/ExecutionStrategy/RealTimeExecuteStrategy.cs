@@ -19,14 +19,7 @@ class RealTimeExecuteStrategy : ExecuteStrategyBase
 
     public override async Task Invoke()
     {
-        var requestSimulationTimer = new SingleThreadTimer(async () =>
-        {
-            var updateOperation = Randomizer.GetProbableEvent(options.UpdateOperationProbable);
-            if (updateOperation)
-                await UpdateOperation();
-            else
-                await ReadOperation();
-        }, options.RequestCycleTime);
+        var requestSimulationTimer = new SingleThreadTimer(SimulateRequest, options.RequestCycleTime);
 
         var presenterTimer = new SingleThreadTimer(() =>
         {

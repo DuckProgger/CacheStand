@@ -27,13 +27,21 @@ internal class Program
         var repositoryProxyOuter = new RequestTimeMeasurmentRepositoryProxy(repositoryProxyInner, metrics);
 
         await FeelSeedData(inMemoryRepository);
+        var dataCount = Seed.DataCount;
 
-        var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-                new RealTimeExecutionOptions()
+        //var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
+        //        new RealTimeExecutionOptions()
+        //        {
+        //            DataCount = dataCount,
+        //            RequestCycleTime = TimeSpan.FromMilliseconds(10),
+        //            PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
+        //            UpdateOperationProbable = 20
+        //        });
+        var executionStrategy = new IterationExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
+                new IterationExecutionOptions()
                 {
                     DataCount = Seed.DataCount,
-                    RequestCycleTime = TimeSpan.FromMilliseconds(10),
-                    PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
+                    RequestsCount = dataCount * 10,
                     UpdateOperationProbable = 20
                 });
         await executionStrategy.Invoke();

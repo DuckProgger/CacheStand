@@ -19,9 +19,7 @@ class IterationExecuteStrategy : ExecuteStrategyBase
     {
         var requestsCount = options.RequestsCount;
         for (int i = 0; i < requestsCount; i++)
-        {
-            await UpdateOperation();
-        }
+            await SimulateRequest();
         var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
         ShowResults(metricsCalc);
     }
