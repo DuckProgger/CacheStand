@@ -34,7 +34,7 @@ public abstract class ExecuteStrategyBase : IExecuteStrategy
     
     private async Task UpdateOperation()
     {
-        var randomId = Random.Shared.Next(1, options.DataCount);
+        var randomId = Randomizer.GetRandomInt(1, options.DataCount);
         var newEntry = new Entry()
         {
             Id = randomId,
@@ -48,7 +48,7 @@ public abstract class ExecuteStrategyBase : IExecuteStrategy
 
     private async Task ReadOperation()
     {
-        var randomId = Random.Shared.Next(1, options.DataCount);
+        var randomId = Randomizer.GetRandomInt(1, options.DataCount);
         var entry = await repository.Get(randomId);
         metricsStorage.Add(metrics with { });
         metrics.Clear();

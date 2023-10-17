@@ -13,9 +13,10 @@ public static class Seed
 
     public static IEnumerable<Entry> GetData()
     {
-        return Enumerable.Range(0, DataCount)
-            .Select(_ => new Entry()
+        return Enumerable.Range(1, DataCount)
+            .Select(id => new Entry()
             {
+                Id = id,
                 Text = Randomizer.GetRandomString(minStringLength, maxStringLength),
                 Data = Randomizer.GetRandomBytes(minBytesLength, maxBytesLength)
             });

@@ -6,6 +6,11 @@ public static class Randomizer
     private const int startCharIndex = 'A';
     private const int endCharIndex = 'z';
 
+    public static int GetRandomInt(int minValue, int maxValue)
+    {
+        return random.Next(minValue, maxValue);
+    }
+    
     public static string GetRandomString(int minLength, int maxLength)
     {
         var length = random.Next(minLength, maxLength);
