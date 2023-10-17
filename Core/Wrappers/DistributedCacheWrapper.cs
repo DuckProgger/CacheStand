@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
-namespace Core.Services;
+namespace Core.Wrappers;
 
 public class DistributedCacheWrapper : IDistributedCacheWrapper
 {

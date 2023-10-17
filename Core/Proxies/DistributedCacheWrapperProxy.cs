@@ -1,7 +1,8 @@
 ﻿using Core.Metric;
 using Core.Utils;
+using Core.Wrappers;
 
-namespace Core.Services;
+namespace Core.Proxies;
 
 public class DistributedCacheWrapperProxy : IDistributedCacheWrapper
 {

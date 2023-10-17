@@ -1,7 +1,8 @@
 ﻿using Core.Data;
 using Core.ExecutionStrategy;
 using Core.Metric;
-using Core.Services;
+using Core.Proxies;
+using Core.Wrappers;
 using Infrastructure;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;

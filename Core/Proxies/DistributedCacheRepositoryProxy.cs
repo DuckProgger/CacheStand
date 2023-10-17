@@ -1,6 +1,7 @@
 ﻿using Core.Data;
+using Core.Wrappers;
 
-namespace Core.Services;
+namespace Core.Proxies;
 
 public class DistributedCacheRepositoryProxy : IRepository
 {

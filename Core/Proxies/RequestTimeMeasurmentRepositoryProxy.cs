@@ -2,7 +2,7 @@
 using Core.Metric;
 using Core.Utils;
 
-namespace Core.Services;
+namespace Core.Proxies;
 
 public class RequestTimeMeasurmentRepositoryProxy : IRepository
 {
