@@ -3,7 +3,7 @@
 namespace Infrastructure;
 public static class Seed
 {
-    public const int DataCount = 10000;
+    public const int DataCount = 1000;
     
     private const int minStringLength = 1000;
     private const int maxStringLength = 10000;

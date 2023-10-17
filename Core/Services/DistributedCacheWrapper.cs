@@ -6,15 +6,12 @@ namespace Core.Services;
 public class DistributedCacheWrapper : IDistributedCacheWrapper
 {
     private readonly IDistributedCache cache;
-    private readonly DistributedCacheEntryOptions cacheOptions;
+    private readonly DistributedCacheEntryOptions options;
 
-    public DistributedCacheWrapper(IDistributedCache cache)
+    public DistributedCacheWrapper(IDistributedCache cache, DistributedCacheEntryOptions options)
     {
         this.cache = cache;
-        cacheOptions = new DistributedCacheEntryOptions()
-        {
-            SlidingExpiration = TimeSpan.FromSeconds(100)
-        };
+        this.options = options;
     }
 
     public async Task<TValue?> GetValueAsync<TValue>(string key)
@@ -28,6 +25,6 @@ public class DistributedCacheWrapper : IDistributedCacheWrapper
     public async Task SetValueAsync<TValue>(string key, TValue value)
     {
         var serializedValue = JsonConvert.SerializeObject(value);
-        await cache.SetStringAsync(key, serializedValue, cacheOptions);
+        await cache.SetStringAsync(key, serializedValue, options);
     }
 }

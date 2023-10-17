@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using Console.ExecutionStrategy;
 using Core.Data;
 using Core.Metric;
 using Core.Services;
@@ -18,86 +18,27 @@ internal class Program
         var metricsStorage = new MetricsStorage();
         var inMemoryRepository = new InMemoryRepository();
         var cache = new MemoryDistributedCache(new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions()));
-        var cacheWrapper = new DistributedCacheWrapper(cache);
+        var cacheWrapper = new DistributedCacheWrapper(cache, new DistributedCacheEntryOptions()
+        {
+            SlidingExpiration = TimeSpan.FromSeconds(100)
+        });
         var cacheWrapperProxy = new DistributedCacheWrapperProxy(cacheWrapper, metrics);
         var repositoryProxyInner = new DistributedCacheRepositoryProxy(inMemoryRepository, cacheWrapperProxy);
         var repositoryProxyOuter = new RequestTimeMeasurmentRepositoryProxy(repositoryProxyInner, metrics);
 
         await FeelSeedData(inMemoryRepository);
-        var dataCount = Seed.DataCount;
 
-        using var requestSimulationTimer = new SingleThreadTimer(async () =>
-        {
-            var updateOperation = Randomizer.GetProbableEvent(20);
-            if (updateOperation)
-                await UpdateOperation(dataCount, repositoryProxyOuter, metricsStorage, metrics);
-            else
-                await ReadOperation(dataCount, repositoryProxyOuter, metricsStorage, metrics);
-        }, TimeSpan.FromMilliseconds(10));
-        
-        using var presenterTimer = new SingleThreadTimer(() =>
-        {
-            var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
-            ShowResults(metricsCalc);
-            return Task.CompletedTask;
-        }, TimeSpan.FromMilliseconds(1000));
-
-        requestSimulationTimer.Start();
-        presenterTimer.Start();
-
-        //var requestsCount = dataCount * 10;
-        //for (int i = 0; i < requestsCount; i++)
-        //{
-        //    sw.Start();
-
-        //    var randomId = Random.Shared.Next(1, dataCount);
-        //    var entry = await repositoryProxyOuter.Get(randomId);
-        //    metricsStorage.Add(metrics with { });
-        //    metrics.Clear();
-
-        //    System.Console.WriteLine(sw.Elapsed.Milliseconds);
-        //    sw.Restart();
-        //}
-        //var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
-        //ShowResults(metricsCalc);
+        var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
+                new RealTimeExecutionOptions()
+                {
+                    DataCount = Seed.DataCount,
+                    RequestCycleTime = TimeSpan.FromMilliseconds(10),
+                    PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
+                    UpdateOperationProbable = 20
+                });
+        await executionStrategy.Invoke();
 
         System.Console.ReadKey();
-    }
-
-    private static async Task UpdateOperation(int dataCount, RequestTimeMeasurmentRepositoryProxy repositoryProxyOuter,
-        MetricsStorage metricsStorage, Metrics metrics)
-    {
-        var randomId = Random.Shared.Next(1, dataCount);
-        var newEntry = new Entry()
-        {
-            Id = randomId,
-            Data = Randomizer.GetRandomBytes(10000),
-            Text = Randomizer.GetRandomString(10000)
-        };
-        await repositoryProxyOuter.Update(newEntry);
-        metricsStorage.Add(metrics with { });
-        metrics.Clear();
-    }
-
-    private static async Task ReadOperation(int dataCount, RequestTimeMeasurmentRepositoryProxy repositoryProxyOuter,
-        MetricsStorage metricsStorage, Metrics metrics)
-    {
-        var randomId = Random.Shared.Next(1, dataCount);
-        var entry = await repositoryProxyOuter.Get(randomId);
-        metricsStorage.Add(metrics with { });
-        metrics.Clear();
-    }
-
-    private static void ShowResults(MetricsCalc metricsCalc)
-    {
-        System.Console.Clear();
-        System.Console.WriteLine($"""
-                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
-                                  HR: {metricsCalc.GetHitRate():.##} % 
-                                  RPS: {metricsCalc.GetRps()}
-                                  Total requests: {metricsCalc.GetTotalRequests()}
-                                  Total hits: {metricsCalc.GetTotalCacheHits()}
-                                  """);
     }
 
     static async Task FeelSeedData(IRepository repository)

@@ -1,4 +1,4 @@
-﻿namespace Console;
+﻿namespace Core.Utils;
 
 public class SingleThreadTimer : IDisposable
 {
@@ -10,13 +10,12 @@ public class SingleThreadTimer : IDisposable
     {
         this.callback = callback;
         timer = new PeriodicTimer(interval);
-
     }
 
-    public void Start()
+    public async Task Start()
     {
         isActive = true;
-        Task.Factory.StartNew(async () =>
+        await Task.Factory.StartNew(async () =>
         {
             while (await timer.WaitForNextTickAsync().ConfigureAwait(false))
             {
