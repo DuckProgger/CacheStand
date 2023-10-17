@@ -13,7 +13,6 @@ namespace Console;
 
 internal class Program
 {
-    [STAThread]
     static async Task Main(string[] args)
     {
         var dbContext = ApplicationContextFactory.CreateDbContext();
@@ -35,23 +34,23 @@ internal class Program
         await SeedData(dbRepository);
         var dataCount = Seed.DataCount;
 
-        var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-            ShowResults,
-            new RealTimeExecutionOptions()
+        //var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
+        //    ShowRealTimeResults,
+        //    new RealTimeExecutionOptions()
+        //    {
+        //        DataCount = dataCount,
+        //        RequestCycleTime = TimeSpan.FromMilliseconds(20),
+        //        PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
+        //        UpdateOperationProbable = 20
+        //    });
+        var executionStrategy = new IterationExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
+            ShowIterationResults,
+            new IterationExecutionOptions()
             {
                 DataCount = dataCount,
-                RequestCycleTime = TimeSpan.FromMilliseconds(50S),
-                PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
-                UpdateOperationProbable = 20
+                RequestsCount = dataCount,
+                UpdateOperationProbable = 50
             });
-        //var executionStrategy = new IterationExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-        //    ShowResults,
-        //    new IterationExecutionOptions()
-        //    {
-        //        DataCount = Seed.DataCount,
-        //        RequestsCount = dataCount,
-        //        UpdateOperationProbable = 50
-        //    });
         await executionStrategy.Invoke();
 
         System.Console.ReadKey();
@@ -65,16 +64,29 @@ internal class Program
             await repository.Create(entry);
     }
 
-    protected static void ShowResults(MetricsCalc metricsCalc)
+    protected static void ShowRealTimeResults(MetricsCalc metricsCalc)
     {
-        //System.Console.Clear();
-        //System.Console.WriteLine($"""
-        //                          Acc: {metricsCalc.GetQueryAcceleration():.##} %
-        //                          HR: {metricsCalc.GetHitRate():.##} %
-        //                          RPS: {metricsCalc.GetRps()}
-        //                          Total requests: {metricsCalc.GetTotalRequests()}
-        //                          Total read requests: {metricsCalc.GetTotalReadRequests()}
-        //                          Total hits: {metricsCalc.GetTotalCacheHits()}
-        //                          """);
+        System.Console.Clear();
+        System.Console.WriteLine($"""
+                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
+                                  HR: {metricsCalc.GetHitRate():.##} %
+                                  RPS: {metricsCalc.GetLastRps()}
+                                  Total requests: {metricsCalc.GetTotalRequests()}
+                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
+                                  Total hits: {metricsCalc.GetTotalCacheHits()}
+                                  """);
+    }
+    
+    protected static void ShowIterationResults(MetricsCalc metricsCalc)
+    {
+        System.Console.Clear();
+        System.Console.WriteLine($"""
+                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
+                                  HR: {metricsCalc.GetHitRate():.##} %
+                                  Average RPS: {metricsCalc.GetAverageRps()}
+                                  Total requests: {metricsCalc.GetTotalRequests()}
+                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
+                                  Total hits: {metricsCalc.GetTotalCacheHits()}
+                                  """);
     }
 }

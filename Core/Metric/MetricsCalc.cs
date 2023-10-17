@@ -29,20 +29,28 @@ public class MetricsCalc
         return (double)(queriesCount - cacheMissCount) / queriesCount * 100.0;
     }
 
-    public int GetRps()
+    public int GetAverageRps()
     {
         if (!metricList.Any()) return 0;
         return (int)metricList
-            .GroupBy(x => x.Timestamp.Second)
+            .GroupBy(x => new { x.Timestamp.Day, x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second })
             .Select(x => x.Count())
             .Average();
+    }
+
+    public int GetLastRps()
+    {
+        if (!metricList.Any()) return 0;
+        var lastTimestamp = metricList.MaxBy(x => x.Timestamp)!.Timestamp;
+        var lastSecondTimestamp = lastTimestamp.AddSeconds(-1);
+        return metricList.Count(x => x.Timestamp > lastSecondTimestamp);
     }
 
     public int GetTotalRequests()
     {
         return metricList.Count;
     }
-    
+
     public int GetTotalReadRequests()
     {
         return metricList.Count(x => x.IsReadOperation);
