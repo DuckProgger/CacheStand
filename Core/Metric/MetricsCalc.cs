@@ -13,6 +13,8 @@ public class MetricsCalc
     {
         var averageCacheMissQueryTime = GetAverageCacheMissQueryTime();
         var averageCacheHitQueryTime = GetAverageCacheHitQueryTime();
+        if (averageCacheMissQueryTime == TimeSpan.Zero || averageCacheHitQueryTime == TimeSpan.Zero)
+            return 0;
         return (averageCacheMissQueryTime - averageCacheHitQueryTime) / averageCacheMissQueryTime * 100.0;
     }
 

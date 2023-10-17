@@ -4,7 +4,7 @@ using Core.Utils;
 
 namespace Core.ExecutionStrategy;
 
-public abstract class ExecuteStrategyBase : IExecuteStrategy
+public abstract class ExecutionStrategyBase : IExecutionStrategy
 {
     private readonly IRepository repository;
     private readonly Metrics metrics;
@@ -12,7 +12,7 @@ public abstract class ExecuteStrategyBase : IExecuteStrategy
 
     protected readonly MetricsStorage metricsStorage;
 
-    protected ExecuteStrategyBase(IRepository repository,
+    protected ExecutionStrategyBase(IRepository repository,
         MetricsStorage metricsStorage, Metrics metrics, ExecutionOptions options)
     {
         this.repository = repository;

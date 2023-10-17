@@ -1,6 +1,6 @@
 ﻿namespace Core.ExecutionStrategy;
 
-interface IExecuteStrategy
+public interface IExecutionStrategy
 {
     Task Invoke();
 }

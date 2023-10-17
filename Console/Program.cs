@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using IExecutionStrategy = Core.ExecutionStrategy.IExecutionStrategy;
 
 namespace Console;
 
@@ -25,7 +26,7 @@ internal class Program
             new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions()));
         var cacheWrapper = new DistributedCacheWrapper(cache, new DistributedCacheEntryOptions()
         {
-            SlidingExpiration = TimeSpan.FromSeconds(100)
+            SlidingExpiration = TimeSpan.FromSeconds(10)
         });
         var cacheWrapperProxy = new DistributedCacheWrapperProxy(cacheWrapper, metrics);
         var repositoryProxyInner = new DistributedCacheRepositoryProxy(dbRepository, cacheWrapperProxy);
@@ -34,26 +35,35 @@ internal class Program
         await SeedData(dbRepository);
         var dataCount = Seed.DataCount;
 
-        //var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-        //    ShowRealTimeResults,
-        //    new RealTimeExecutionOptions()
-        //    {
-        //        DataCount = dataCount,
-        //        RequestCycleTime = TimeSpan.FromMilliseconds(20),
-        //        PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
-        //        UpdateOperationProbable = 20
-        //    });
-        var executionStrategy = new IterationExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-            ShowIterationResults,
-            new IterationExecutionOptions()
-            {
-                DataCount = dataCount,
-                RequestsCount = dataCount,
-                UpdateOperationProbable = 50
-            });
+        var executionStrategy = CreateExecutionStrategy(ExecutionStrategyType.RealTime, 
+            repositoryProxyOuter, metricsStorage, metrics, dataCount);
         await executionStrategy.Invoke();
 
         System.Console.ReadKey();
+    }
+
+    private static IExecutionStrategy CreateExecutionStrategy(ExecutionStrategyType strategyType, 
+        IRepository repository, MetricsStorage metricsStorage, Metrics metrics, int dataCount)
+    {
+        return strategyType switch
+        {
+            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repository, metricsStorage,
+                metrics, ShowIterationResults,
+                new IterationExecutionOptions()
+                {
+                    DataCount = dataCount, RequestsCount = dataCount, UpdateOperationProbable = 00
+                }),
+            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repository, metricsStorage,
+                metrics, ShowRealTimeResults,
+                new RealTimeExecutionOptions()
+                {
+                    DataCount = dataCount,
+                    RequestCycleTime = TimeSpan.FromMilliseconds(500),
+                    PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
+                    UpdateOperationProbable = 20
+                }),
+            _ => throw new ArgumentOutOfRangeException(nameof(strategyType), strategyType, null)
+        };
     }
 
     private static async Task SeedData(IRepository repository)
@@ -89,4 +99,10 @@ internal class Program
                                   Total hits: {metricsCalc.GetTotalCacheHits()}
                                   """);
     }
+}
+
+enum ExecutionStrategyType
+{
+    Iteration,
+    RealTime
 }

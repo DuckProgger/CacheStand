@@ -3,12 +3,12 @@ using Core.Metric;
 
 namespace Core.ExecutionStrategy;
 
-public class IterationExecuteStrategy : ExecuteStrategyBase
+public class IterationExecutionStrategy : ExecutionStrategyBase
 {
     private readonly Action<MetricsCalc> consumeResultsAction;
     private readonly IterationExecutionOptions options;
 
-    public IterationExecuteStrategy(IRepository repository,
+    public IterationExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
         Action<MetricsCalc> consumeResultsAction,

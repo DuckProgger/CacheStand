@@ -4,12 +4,12 @@ using Core.Utils;
 
 namespace Core.ExecutionStrategy;
 
-public class RealTimeExecuteStrategy : ExecuteStrategyBase
+public class RealTimeExecutionStrategy : ExecutionStrategyBase
 {
     private readonly Action<MetricsCalc> consumeResultsAction;
     private readonly RealTimeExecutionOptions options;
 
-    public RealTimeExecuteStrategy(IRepository repository,
+    public RealTimeExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
         Action<MetricsCalc> consumeResultsAction,
