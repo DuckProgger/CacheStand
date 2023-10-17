@@ -1,19 +1,21 @@
 ﻿using Core.Data;
 using Core.Metric;
 using Core.Utils;
-using Infrastructure;
 
-namespace Console.ExecutionStrategy;
+namespace Core.ExecutionStrategy;
 
-class RealTimeExecuteStrategy : ExecuteStrategyBase
+public class RealTimeExecuteStrategy : ExecuteStrategyBase
 {
+    private readonly Action<MetricsCalc> consumeResultsAction;
     private readonly RealTimeExecutionOptions options;
 
     public RealTimeExecuteStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
+        Action<MetricsCalc> consumeResultsAction,
         RealTimeExecutionOptions options) : base(repository, metricsStorage, metrics, options)
     {
+        this.consumeResultsAction = consumeResultsAction;
         this.options = options;
     }
 
@@ -21,14 +23,14 @@ class RealTimeExecuteStrategy : ExecuteStrategyBase
     {
         var requestSimulationTimer = new SingleThreadTimer(SimulateRequest, options.RequestCycleTime);
 
-        var presenterTimer = new SingleThreadTimer(() =>
+        var consumerTimer = new SingleThreadTimer(() =>
         {
             var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
-            ShowResults(metricsCalc);
+            consumeResultsAction(metricsCalc);
             return Task.CompletedTask;
         }, options.PresentationCycleTime);
 
         await requestSimulationTimer.Start();
-        await presenterTimer.Start();
+        await consumerTimer.Start();
     }
 }

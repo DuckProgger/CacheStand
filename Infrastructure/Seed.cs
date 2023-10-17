@@ -1,4 +1,5 @@
 ﻿using Core.Data;
+using Core.Utils;
 
 namespace Infrastructure;
 public static class Seed

@@ -1,17 +1,20 @@
 ﻿using Core.Data;
 using Core.Metric;
 
-namespace Console.ExecutionStrategy;
+namespace Core.ExecutionStrategy;
 
-class IterationExecuteStrategy : ExecuteStrategyBase
+public class IterationExecuteStrategy : ExecuteStrategyBase
 {
+    private readonly Action<MetricsCalc> consumeResultsAction;
     private readonly IterationExecutionOptions options;
 
     public IterationExecuteStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
+        Action<MetricsCalc> consumeResultsAction,
         IterationExecutionOptions options) : base(repository, metricsStorage, metrics, options)
     {
+        this.consumeResultsAction = consumeResultsAction;
         this.options = options;
     }
 
@@ -21,6 +24,6 @@ class IterationExecuteStrategy : ExecuteStrategyBase
         for (int i = 0; i < requestsCount; i++)
             await SimulateRequest();
         var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
-        ShowResults(metricsCalc);
+        consumeResultsAction(metricsCalc);
     }
 }

@@ -1,10 +1,10 @@
 ﻿using Core.Data;
 using Core.Metric;
-using Infrastructure;
+using Core.Utils;
 
-namespace Console.ExecutionStrategy;
+namespace Core.ExecutionStrategy;
 
-abstract class ExecuteStrategyBase : IExecuteStrategy
+public abstract class ExecuteStrategyBase : IExecuteStrategy
 {
     private readonly IRepository repository;
     private readonly Metrics metrics;
@@ -53,16 +53,17 @@ abstract class ExecuteStrategyBase : IExecuteStrategy
         metricsStorage.Add(metrics with { });
         metrics.Clear();
     }
-    protected static void ShowResults(MetricsCalc metricsCalc)
-    {
-        System.Console.Clear();
-        System.Console.WriteLine($"""
-                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
-                                  HR: {metricsCalc.GetHitRate():.##} %
-                                  RPS: {metricsCalc.GetRps()}
-                                  Total requests: {metricsCalc.GetTotalRequests()}
-                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
-                                  Total hits: {metricsCalc.GetTotalCacheHits()}
-                                  """);
-    }
+    
+    //protected static void ShowResults(MetricsCalc metricsCalc)
+    //{
+    //    System.Console.Clear();
+    //    System.Console.WriteLine($"""
+    //                              Acc: {metricsCalc.GetQueryAcceleration():.##} %
+    //                              HR: {metricsCalc.GetHitRate():.##} %
+    //                              RPS: {metricsCalc.GetRps()}
+    //                              Total requests: {metricsCalc.GetTotalRequests()}
+    //                              Total read requests: {metricsCalc.GetTotalReadRequests()}
+    //                              Total hits: {metricsCalc.GetTotalCacheHits()}
+    //                              """);
+    //}
 }

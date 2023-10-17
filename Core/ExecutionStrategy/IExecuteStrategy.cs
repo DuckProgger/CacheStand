@@ -1,4 +1,4 @@
-﻿namespace Console.ExecutionStrategy;
+﻿namespace Core.ExecutionStrategy;
 
 interface IExecuteStrategy
 {

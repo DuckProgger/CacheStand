@@ -1,5 +1,5 @@
-﻿using Console.ExecutionStrategy;
-using Core.Data;
+﻿using Core.Data;
+using Core.ExecutionStrategy;
 using Core.Metric;
 using Core.Services;
 using Infrastructure;
@@ -30,20 +30,22 @@ internal class Program
         var dataCount = Seed.DataCount;
 
         //var executionStrategy = new RealTimeExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-        //        new RealTimeExecutionOptions()
-        //        {
-        //            DataCount = dataCount,
-        //            RequestCycleTime = TimeSpan.FromMilliseconds(10),
-        //            PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
-        //            UpdateOperationProbable = 20
-        //        });
+        //    ShowResults,
+        //    new RealTimeExecutionOptions()
+        //    {
+        //        DataCount = dataCount,
+        //        RequestCycleTime = TimeSpan.FromMilliseconds(10),
+        //        PresentationCycleTime = TimeSpan.FromMilliseconds(1000),
+        //        UpdateOperationProbable = 20
+        //    });
         var executionStrategy = new IterationExecuteStrategy(repositoryProxyOuter, metricsStorage, metrics,
-                new IterationExecutionOptions()
-                {
-                    DataCount = Seed.DataCount,
-                    RequestsCount = dataCount,
-                    UpdateOperationProbable = 50
-                });
+            ShowResults,
+            new IterationExecutionOptions()
+            {
+                DataCount = Seed.DataCount,
+                RequestsCount = dataCount,
+                UpdateOperationProbable = 50
+            });
         await executionStrategy.Invoke();
 
         System.Console.ReadKey();
@@ -54,5 +56,18 @@ internal class Program
         var entries = Seed.GetData();
         foreach (var entry in entries)
             await repository.Create(entry);
+    }
+
+    protected static void ShowResults(MetricsCalc metricsCalc)
+    {
+        System.Console.Clear();
+        System.Console.WriteLine($"""
+                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
+                                  HR: {metricsCalc.GetHitRate():.##} %
+                                  RPS: {metricsCalc.GetRps()}
+                                  Total requests: {metricsCalc.GetTotalRequests()}
+                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
+                                  Total hits: {metricsCalc.GetTotalCacheHits()}
+                                  """);
     }
 }

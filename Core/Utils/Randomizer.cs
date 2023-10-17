@@ -1,4 +1,4 @@
-﻿namespace Infrastructure;
+﻿namespace Core.Utils;
 
 public static class Randomizer
 {
