@@ -18,8 +18,14 @@ public class MetricsCalc
 
     public double GetHitRate()
     {
-        var queriesCount = metricList.Count;
-        var cacheMissCount = metricList.Count(x => !x.CacheHit);
+        var test = metricList
+            .Where(x => !x.IsReadOperation)
+            .ToArray();
+        var readOperations = metricList
+            .Where(x => x.IsReadOperation)
+            .ToArray();
+        var queriesCount = readOperations.Length;
+        var cacheMissCount = readOperations.Count(x => !x.CacheHit);
         return (double)(queriesCount - cacheMissCount) / queriesCount * 100.0;
     }
 
@@ -36,6 +42,11 @@ public class MetricsCalc
     {
         return metricList.Count;
     }
+    
+    public int GetTotalReadRequests()
+    {
+        return metricList.Count(x => x.IsReadOperation);
+    }
 
     public int GetTotalCacheHits()
     {
@@ -44,9 +55,9 @@ public class MetricsCalc
 
     private TimeSpan GetAverageCacheMissQueryTime()
     {
-        if (metricList.All(x => x.CacheHit)) return TimeSpan.Zero;
+        if (metricList.All(x => x.CacheHit || !x.IsReadOperation)) return TimeSpan.Zero;
         var cacheMissMetricsTicks = metricList
-            .Where(x => !x.CacheHit)
+            .Where(x => !x.CacheHit && x.IsReadOperation)
             .Select(x => x.RequestTime.Ticks - x.CacheCosts.Ticks)
             .Average();
         return new TimeSpan((int)cacheMissMetricsTicks);
@@ -54,9 +65,9 @@ public class MetricsCalc
 
     private TimeSpan GetAverageCacheHitQueryTime()
     {
-        if (metricList.All(x => !x.CacheHit)) return TimeSpan.Zero;
+        if (metricList.All(x => !x.CacheHit || !x.IsReadOperation)) return TimeSpan.Zero;
         var cacheHitMetricsTicks = metricList
-            .Where(x => x.CacheHit)
+            .Where(x => x.CacheHit && x.IsReadOperation)
             .Select(x => x.RequestTime.Ticks)
             .Average();
         return new TimeSpan((int)cacheHitMetricsTicks);

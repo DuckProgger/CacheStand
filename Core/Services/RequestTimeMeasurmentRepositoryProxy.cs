@@ -21,6 +21,7 @@ public class RequestTimeMeasurmentRepositoryProxy : IRepository
         using var profiler = new Profiler();
         var entry = await repository.Get(id);
         metrics.RequestTime = profiler.ElapsedTime;
+        metrics.IsReadOperation = true;
         return entry;
     }
 

@@ -61,6 +61,7 @@ abstract class ExecuteStrategyBase : IExecuteStrategy
                                   HR: {metricsCalc.GetHitRate():.##} %
                                   RPS: {metricsCalc.GetRps()}
                                   Total requests: {metricsCalc.GetTotalRequests()}
+                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
                                   Total hits: {metricsCalc.GetTotalCacheHits()}
                                   """);
     }

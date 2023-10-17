@@ -9,6 +9,8 @@ public record Metrics
     public bool CacheHit { get; set; }
 
     public DateTime Timestamp { get; set; }
+    
+    public bool IsReadOperation { get; set; }
 
     public void Clear()
     {
@@ -16,5 +18,6 @@ public record Metrics
         CacheCosts = default;
         CacheHit = default;
         Timestamp = default;
+        IsReadOperation = default;
     }
 }

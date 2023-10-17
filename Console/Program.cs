@@ -41,8 +41,8 @@ internal class Program
                 new IterationExecutionOptions()
                 {
                     DataCount = Seed.DataCount,
-                    RequestsCount = dataCount * 10,
-                    UpdateOperationProbable = 20
+                    RequestsCount = dataCount,
+                    UpdateOperationProbable = 50
                 });
         await executionStrategy.Invoke();
 
