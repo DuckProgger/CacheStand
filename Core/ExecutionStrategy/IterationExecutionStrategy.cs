@@ -3,18 +3,15 @@ using Core.Metric;
 
 namespace Core.ExecutionStrategy;
 
-public class IterationExecutionStrategy : ExecutionStrategyBase
+public class IterationExecutionStrategy : ExecutionStrategy
 {
-    private readonly Action<MetricsResult> consumeResultsAction;
     private readonly IterationExecutionOptions options;
 
     public IterationExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
-        Action<MetricsResult> consumeResultsAction,
         IterationExecutionOptions options) : base(repository, metricsStorage, metrics, options)
     {
-        this.consumeResultsAction = consumeResultsAction;
         this.options = options;
     }
 
@@ -25,6 +22,6 @@ public class IterationExecutionStrategy : ExecutionStrategyBase
             await SimulateRequest();
         var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
         var metricsResult = metricsCalc.Calculate(ExecutionStrategyType.Iteration);
-        consumeResultsAction(metricsResult);
+        OnResultReceived(metricsResult);
     }
 }

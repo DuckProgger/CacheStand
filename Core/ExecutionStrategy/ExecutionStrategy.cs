@@ -4,7 +4,7 @@ using Core.Utils;
 
 namespace Core.ExecutionStrategy;
 
-public abstract class ExecutionStrategyBase : IExecutionStrategy
+public abstract class ExecutionStrategy
 {
     private readonly IRepository repository;
     private readonly Metrics metrics;
@@ -12,7 +12,7 @@ public abstract class ExecutionStrategyBase : IExecutionStrategy
 
     protected readonly MetricsStorage metricsStorage;
 
-    protected ExecutionStrategyBase(IRepository repository,
+    protected ExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage, Metrics metrics, ExecutionOptions options)
     {
         this.repository = repository;
@@ -20,6 +20,8 @@ public abstract class ExecutionStrategyBase : IExecutionStrategy
         this.metrics = metrics;
         this.options = options;
     }
+
+    public event Action<MetricsResult>? ResultReceived;
 
     public abstract Task Invoke();
     
@@ -53,17 +55,9 @@ public abstract class ExecutionStrategyBase : IExecutionStrategy
         metricsStorage.Add(metrics with { });
         metrics.Clear();
     }
-    
-    //protected static void ShowResults(MetricsCalc metricsCalc)
-    //{
-    //    System.Console.Clear();
-    //    System.Console.WriteLine($"""
-    //                              Acc: {metricsCalc.GetQueryAcceleration():.##} %
-    //                              HR: {metricsCalc.GetHitRate():.##} %
-    //                              RPS: {metricsCalc.GetRps()}
-    //                              Total requests: {metricsCalc.GetTotalRequests()}
-    //                              Total read requests: {metricsCalc.GetTotalReadRequests()}
-    //                              Total hits: {metricsCalc.GetTotalCacheHits()}
-    //                              """);
-    //}
+
+    protected virtual void OnResultReceived(MetricsResult result)
+    {
+        ResultReceived?.Invoke(result);
+    }
 }

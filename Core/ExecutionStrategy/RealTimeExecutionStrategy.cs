@@ -4,18 +4,15 @@ using Core.Utils;
 
 namespace Core.ExecutionStrategy;
 
-public class RealTimeExecutionStrategy : ExecutionStrategyBase
+public class RealTimeExecutionStrategy : ExecutionStrategy
 {
-    private readonly Action<MetricsResult> consumeResultsAction;
     private readonly RealTimeExecutionOptions options;
 
     public RealTimeExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
-        Action<MetricsResult> consumeResultsAction,
         RealTimeExecutionOptions options) : base(repository, metricsStorage, metrics, options)
     {
-        this.consumeResultsAction = consumeResultsAction;
         this.options = options;
     }
 
@@ -27,11 +24,13 @@ public class RealTimeExecutionStrategy : ExecutionStrategyBase
         {
             var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
             var metricsResult = metricsCalc.Calculate(ExecutionStrategyType.RealTime);
-            consumeResultsAction(metricsResult);
+            OnResultReceived(metricsResult);
+
             return Task.CompletedTask;
         }, options.PresentationCycleTime);
 
-        await requestSimulationTimer.Start();
-        await consumerTimer.Start();
+        var simulationTask = requestSimulationTimer.Start();
+        var consumerTask = consumerTimer.Start();
+        await Task.WhenAll(simulationTask, consumerTask);
     }
 }

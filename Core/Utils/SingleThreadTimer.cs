@@ -15,14 +15,15 @@ public class SingleThreadTimer : IDisposable
     public async Task Start()
     {
         isActive = true;
-        await Task.Factory.StartNew(async () =>
+
+        await Task.Run(async () =>
         {
             while (await timer.WaitForNextTickAsync().ConfigureAwait(false))
             {
                 if (!isActive) break;
-                await callback();
+                await callback().ContinueWith(task => throw task.Exception!, TaskContinuationOptions.OnlyOnFaulted);
             }
-        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        }, CancellationToken.None);
     }
 
     public void Stop()
