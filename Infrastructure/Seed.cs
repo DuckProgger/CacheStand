@@ -2,23 +2,17 @@
 using Core.Utils;
 
 namespace Infrastructure;
+
 public static class Seed
 {
-    public const int DataCount = 1000;
-    
-    private const int minStringLength = 1000;
-    private const int maxStringLength = 10000;
-    private const int minBytesLength = 10000;
-    private const int maxBytesLength = 100000;
-
-    public static IEnumerable<Entry> GetData()
+    public static IEnumerable<Entry> GetData(SeedOptions options)
     {
-        return Enumerable.Range(1, DataCount)
+        return Enumerable.Range(1, options.DataCount)
             .Select(id => new Entry()
             {
                 Id = id,
-                Text = Randomizer.GetRandomString(minStringLength, maxStringLength),
-                Data = Randomizer.GetRandomBytes(minBytesLength, maxBytesLength)
+                Text = Randomizer.GetRandomString(options.MinStringLength, options.MaxStringLength),
+                Data = Randomizer.GetRandomBytes(options.MinBytesLength, options.MaxBytesLength)
             });
     }
 }

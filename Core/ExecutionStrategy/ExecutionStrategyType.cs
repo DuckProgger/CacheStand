@@ -2,6 +2,6 @@
 
 public enum ExecutionStrategyType
 {
-    Iteration,
-    RealTime
+    Iteration = 0,
+    RealTime = 1
 }
