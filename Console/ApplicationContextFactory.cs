@@ -12,7 +12,7 @@ public class ApplicationContextFactory
     {
         return new ApplicationContext(
             new DbContextOptionsBuilder<ApplicationContext>()
-                .UseSqlite(Settings.DbConnection.ConnectionString)
+                .UseSqlite(Settings.ConnectionStrings.Database)
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 //.EnableSensitiveDataLogging()
                 //.LogTo(System.Console.WriteLine, LogLevel.Information)

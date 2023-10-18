@@ -7,7 +7,9 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace Console;
 
@@ -18,11 +20,11 @@ public static class ExecutionStrategyFactory
         var repository = await CreateRespository(Settings.RepositoryType);
         await SeedData(repository);
 
+        var cache = CreateCache(Settings.CacheType);
+
         var metrics = new Metrics();
         var metricsStorage = new MetricsStorage();
 
-        var cache = new MemoryDistributedCache(
-            new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions()));
         var cacheWrapper = new DistributedCacheWrapper(cache, new DistributedCacheEntryOptions()
         {
             SlidingExpiration = Settings.CacheOptions.SlidingExpiration
@@ -68,6 +70,26 @@ public static class ExecutionStrategyFactory
                 return new DbRepository(dbContext);
             default:
                 throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private static IDistributedCache CreateCache(CacheType cacheType)
+    {
+        switch (cacheType)
+        {
+            case CacheType.InMemory:
+                return new MemoryDistributedCache(
+                    new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions()));
+            case CacheType.Redis:
+                var redis = ConnectionMultiplexer.Connect($"{Settings.ConnectionStrings.Cache},allowAdmin=true");
+                var server = redis.GetServer(Settings.ConnectionStrings.Cache);
+                server.FlushDatabase();
+                return new RedisCache(new RedisCacheOptions()
+                {
+                    Configuration = Settings.ConnectionStrings.Cache,
+                });
+            default:
+                throw new ArgumentOutOfRangeException(nameof(cacheType), cacheType, null);
         }
     }
 

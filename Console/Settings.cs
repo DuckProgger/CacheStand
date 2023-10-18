@@ -56,10 +56,14 @@ public static class Settings
         public static TimeSpan SlidingExpiration => TimeSpan.FromSeconds(int.Parse(config["CacheOptions:SlidingExpirationSeconds"]!));
     }
 
-    public static class DbConnection
+    public static class ConnectionStrings
     {
-        public static string ConnectionString => config["ConnectionStrings:DefaultConnection"]!;
+        public static string Database => config["ConnectionStrings:Database"]!;
+        
+        public static string Cache => config["ConnectionStrings:Cache"]!;
     }
     
     public static RepositoryType RepositoryType => Enum.Parse<RepositoryType>(config["RepositoryType"]!);
+    
+    public static CacheType CacheType => Enum.Parse<CacheType>(config["CacheType"]!);
 }
