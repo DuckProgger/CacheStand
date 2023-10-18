@@ -48,13 +48,13 @@ internal class Program
         return strategyType switch
         {
             ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repository, metricsStorage,
-                metrics, ShowIterationResults,
+                metrics, ShowResults,
                 new IterationExecutionOptions()
                 {
                     DataCount = dataCount, RequestsCount = dataCount, UpdateOperationProbable = 00
                 }),
             ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repository, metricsStorage,
-                metrics, ShowRealTimeResults,
+                metrics, ShowResults,
                 new RealTimeExecutionOptions()
                 {
                     DataCount = dataCount,
@@ -74,35 +74,16 @@ internal class Program
             await repository.Create(entry);
     }
 
-    protected static void ShowRealTimeResults(MetricsCalc metricsCalc)
+    private static void ShowResults(MetricsResult metricsResult)
     {
         System.Console.Clear();
         System.Console.WriteLine($"""
-                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
-                                  HR: {metricsCalc.GetHitRate():.##} %
-                                  RPS: {metricsCalc.GetLastRps()}
-                                  Total requests: {metricsCalc.GetTotalRequests()}
-                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
-                                  Total hits: {metricsCalc.GetTotalCacheHits()}
+                                  Acc: {metricsResult.QueryAcceleration:.##} %
+                                  HR: {metricsResult.QueryAcceleration:.##} %
+                                  RPS: {metricsResult.RequestsPerSecond}
+                                  Total requests: {metricsResult.TotalRequests}
+                                  Total read requests: {metricsResult.TotalReadRequests}
+                                  Total hits: {metricsResult.TotalCacheHits}
                                   """);
     }
-    
-    protected static void ShowIterationResults(MetricsCalc metricsCalc)
-    {
-        System.Console.Clear();
-        System.Console.WriteLine($"""
-                                  Acc: {metricsCalc.GetQueryAcceleration():.##} %
-                                  HR: {metricsCalc.GetHitRate():.##} %
-                                  Average RPS: {metricsCalc.GetAverageRps()}
-                                  Total requests: {metricsCalc.GetTotalRequests()}
-                                  Total read requests: {metricsCalc.GetTotalReadRequests()}
-                                  Total hits: {metricsCalc.GetTotalCacheHits()}
-                                  """);
-    }
-}
-
-enum ExecutionStrategyType
-{
-    Iteration,
-    RealTime
 }

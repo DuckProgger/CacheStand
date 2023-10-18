@@ -6,13 +6,13 @@ namespace Core.ExecutionStrategy;
 
 public class RealTimeExecutionStrategy : ExecutionStrategyBase
 {
-    private readonly Action<MetricsCalc> consumeResultsAction;
+    private readonly Action<MetricsResult> consumeResultsAction;
     private readonly RealTimeExecutionOptions options;
 
     public RealTimeExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
         Metrics metrics,
-        Action<MetricsCalc> consumeResultsAction,
+        Action<MetricsResult> consumeResultsAction,
         RealTimeExecutionOptions options) : base(repository, metricsStorage, metrics, options)
     {
         this.consumeResultsAction = consumeResultsAction;
@@ -26,7 +26,8 @@ public class RealTimeExecutionStrategy : ExecutionStrategyBase
         var consumerTimer = new SingleThreadTimer(() =>
         {
             var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
-            consumeResultsAction(metricsCalc);
+            var metricsResult = metricsCalc.Calculate(ExecutionStrategyType.RealTime);
+            consumeResultsAction(metricsResult);
             return Task.CompletedTask;
         }, options.PresentationCycleTime);
 

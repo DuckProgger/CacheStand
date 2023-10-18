@@ -1,4 +1,6 @@
-﻿namespace Core.Metric;
+﻿using Core.ExecutionStrategy;
+
+namespace Core.Metric;
 
 public class MetricsCalc
 {
@@ -9,7 +11,29 @@ public class MetricsCalc
         metricList = new List<Metrics>(metrics);
     }
 
-    public double GetQueryAcceleration()
+    public MetricsResult Calculate(ExecutionStrategyType strategyType)
+    {
+        var queryAcceleration = GetQueryAcceleration();
+        var hitRate = GetHitRate();
+        var rps = strategyType == ExecutionStrategyType.RealTime
+            ? GetLastRps()
+            : GetAverageRps();
+        var totalRequests = GetTotalRequests();
+        var totalReadRequests = GetTotalReadRequests();
+        var totalCacheHits = GetTotalCacheHits();
+
+        return new MetricsResult()
+        {
+            QueryAcceleration = queryAcceleration,
+            HitRate = hitRate,
+            RequestsPerSecond = rps,
+            TotalRequests = totalRequests,
+            TotalReadRequests = totalReadRequests,
+            TotalCacheHits = totalCacheHits,
+        };
+    }
+
+    private double GetQueryAcceleration()
     {
         var averageCacheMissQueryTime = GetAverageCacheMissQueryTime();
         var averageCacheHitQueryTime = GetAverageCacheHitQueryTime();
@@ -18,11 +42,8 @@ public class MetricsCalc
         return (averageCacheMissQueryTime - averageCacheHitQueryTime) / averageCacheMissQueryTime * 100.0;
     }
 
-    public double GetHitRate()
+    private double GetHitRate()
     {
-        var test = metricList
-            .Where(x => !x.IsReadOperation)
-            .ToArray();
         var readOperations = metricList
             .Where(x => x.IsReadOperation)
             .ToArray();
@@ -31,7 +52,7 @@ public class MetricsCalc
         return (double)(queriesCount - cacheMissCount) / queriesCount * 100.0;
     }
 
-    public int GetAverageRps()
+    private int GetAverageRps()
     {
         if (!metricList.Any()) return 0;
         return (int)metricList
@@ -40,7 +61,7 @@ public class MetricsCalc
             .Average();
     }
 
-    public int GetLastRps()
+    private int GetLastRps()
     {
         if (!metricList.Any()) return 0;
         var lastTimestamp = metricList.MaxBy(x => x.Timestamp)!.Timestamp;
@@ -48,17 +69,17 @@ public class MetricsCalc
         return metricList.Count(x => x.Timestamp > lastSecondTimestamp);
     }
 
-    public int GetTotalRequests()
+    private int GetTotalRequests()
     {
         return metricList.Count;
     }
 
-    public int GetTotalReadRequests()
+    private int GetTotalReadRequests()
     {
         return metricList.Count(x => x.IsReadOperation);
     }
 
-    public int GetTotalCacheHits()
+    private int GetTotalCacheHits()
     {
         return metricList.Any(x => x.CacheHit) ? metricList.Count(x => x.CacheHit) : 0;
     }
