@@ -8,12 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using IExecutionStrategy = Core.ExecutionStrategy.IExecutionStrategy;
 
 namespace Console;
 
 internal class Program
 {
+
     static async Task Main(string[] args)
     {
         var dbContext = ApplicationContextFactory.CreateDbContext();
@@ -35,26 +35,31 @@ internal class Program
         await SeedData(dbRepository);
         var dataCount = Seed.DataCount;
 
-        var executionStrategy = CreateExecutionStrategy(ExecutionStrategyType.RealTime, 
+        var executionStrategy = CreateExecutionStrategy(ExecutionStrategyType.RealTime,
             repositoryProxyOuter, metricsStorage, metrics, dataCount);
+        var logPath = $"logs/{DateTime.Now:yy-MM-dd HH-mm}.txt";
+        executionStrategy.ResultReceived += ShowResults;
+        executionStrategy.ResultReceived += result => MetricsCsvWriter.Write(logPath, result);
         await executionStrategy.Invoke();
 
         System.Console.ReadKey();
     }
 
-    private static IExecutionStrategy CreateExecutionStrategy(ExecutionStrategyType strategyType, 
+    private static ExecutionStrategy CreateExecutionStrategy(ExecutionStrategyType strategyType,
         IRepository repository, MetricsStorage metricsStorage, Metrics metrics, int dataCount)
     {
         return strategyType switch
         {
             ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repository, metricsStorage,
-                metrics, ShowResults,
+                metrics,
                 new IterationExecutionOptions()
                 {
-                    DataCount = dataCount, RequestsCount = dataCount, UpdateOperationProbable = 00
+                    DataCount = dataCount,
+                    RequestsCount = dataCount,
+                    UpdateOperationProbable = 00
                 }),
             ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repository, metricsStorage,
-                metrics, ShowResults,
+                metrics,
                 new RealTimeExecutionOptions()
                 {
                     DataCount = dataCount,
