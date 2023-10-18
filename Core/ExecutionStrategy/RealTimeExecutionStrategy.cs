@@ -25,12 +25,12 @@ public class RealTimeExecutionStrategy : ExecutionStrategy
             var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
             var metricsResult = metricsCalc.Calculate(ExecutionStrategyType.RealTime);
             OnResultReceived(metricsResult);
-
             return Task.CompletedTask;
         }, options.PresentationCycleTime);
 
-        var simulationTask = requestSimulationTimer.Start();
-        var consumerTask = consumerTimer.Start();
+        var cts = new CancellationTokenSource();
+        var simulationTask = requestSimulationTimer.Start(cts.Token).CancelOnFaulted(cts);
+        var consumerTask = consumerTimer.Start(cts.Token).CancelOnFaulted(cts);
         await Task.WhenAll(simulationTask, consumerTask);
     }
 }

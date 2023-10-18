@@ -12,17 +12,20 @@ public class SingleThreadTimer : IDisposable
         timer = new PeriodicTimer(interval);
     }
 
-    public async Task Start()
+    public async Task Start(CancellationToken cancellationToken = default)
     {
         isActive = true;
 
         await Task.Run(async () =>
         {
-            while (await timer.WaitForNextTickAsync().ConfigureAwait(false))
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (!isActive) break;
-                await callback().ContinueWith(task => throw task.Exception!, TaskContinuationOptions.OnlyOnFaulted);
+
+                await callback();
             }
+
         }, CancellationToken.None);
     }
 
