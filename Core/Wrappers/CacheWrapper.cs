@@ -22,7 +22,7 @@ public class CacheWrapper : ICacheWrapper
     {
         using var profiler = new Profiler();
         var entryStr = await cache.GetStringAsync(key);
-        metrics.GetCacheTime = profiler.ElapsedTime;
+        metrics.CacheReadTime = profiler.ElapsedTime;
         if (entryStr is null) return default;
         profiler.Restart();
         var value = JsonConvert.DeserializeObject<TValue>(entryStr);
@@ -37,6 +37,6 @@ public class CacheWrapper : ICacheWrapper
         metrics.SerializationTime = profiler.ElapsedTime;
         profiler.Restart();
         await cache.SetStringAsync(key, serializedValue, options);
-        metrics.SetCacheTime = profiler.ElapsedTime;
+        metrics.CacheWriteTime = profiler.ElapsedTime;
     }
 }

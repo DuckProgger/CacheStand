@@ -16,7 +16,10 @@ internal class MetricsCsvWriter
     public void Write(MetricsResult data)
     {
         var strData =
-            $"{data.QueryAcceleration};" +
+            $"{data.TotalRequestTime};" +
+            $"{data.AverageRequestTime};" +
+            $"{data.AverageCacheTime};" +
+            $"{data.CacheEfficiency};" +
             $"{data.HitRate};" +
             $"{data.RequestsPerSecond};" +
             $"{data.TotalRequests};" +
@@ -29,7 +32,10 @@ internal class MetricsCsvWriter
     private void WriteHeader()
     {
         var strHeader =
-        $"{nameof(MetricsResult.QueryAcceleration)};" +
+        $"{nameof(MetricsResult.TotalRequestTime)};" +
+        $"{nameof(MetricsResult.AverageRequestTime)};" +
+        $"{nameof(MetricsResult.AverageCacheTime)};" +
+        $"{nameof(MetricsResult.CacheEfficiency)};" +
         $"{nameof(MetricsResult.HitRate)};" +
         $"{nameof(MetricsResult.RequestsPerSecond)};" +
         $"{nameof(MetricsResult.TotalRequests)};" +

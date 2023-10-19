@@ -19,7 +19,7 @@ public class RepositoryTimeMeasurmentProxy : IRepository
     {
         var profiler = new Profiler();
         var entry = await repository.Get(id);
-        metrics.GetDbTime = profiler.ElapsedTime;
+        metrics.RepositoryReadTime = profiler.ElapsedTime;
         return entry;
     }
 
@@ -32,7 +32,7 @@ public class RepositoryTimeMeasurmentProxy : IRepository
     {
         using var profiler = new Profiler();
         var updatedEntry = await repository.Update(entry);
-        metrics.SetDbTime = profiler.ElapsedTime;
+        metrics.RepositoryWriteTime = profiler.ElapsedTime;
         return updatedEntry;
         
     }

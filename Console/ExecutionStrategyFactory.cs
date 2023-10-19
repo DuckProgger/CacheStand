@@ -17,7 +17,7 @@ public static class ExecutionStrategyFactory
 {
     public static async Task<ExecutionStrategy> CreateExecutionStrategy()
     {
-        var repository = await CreateRespository(Settings.RepositoryType);
+        var repository = await CreateRepository(Settings.RepositoryType);
         await SeedData(repository);
 
         var metrics = new Metrics();
@@ -67,7 +67,7 @@ public static class ExecutionStrategyFactory
         return new RequestTimeMeasurmentRepositoryProxy(cacheRepositoryProxy, metrics);
     }
 
-    private static async Task<IRepository> CreateRespository(RepositoryType repositoryType)
+    private static async Task<IRepository> CreateRepository(RepositoryType repositoryType)
     {
         switch (repositoryType)
         {

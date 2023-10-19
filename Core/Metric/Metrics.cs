@@ -16,13 +16,13 @@ public record Metrics
 
     public TimeSpan DeserializationTime { get; set; }
 
-    public TimeSpan GetCacheTime { get; set; }
+    public TimeSpan CacheReadTime { get; set; }
     
-    public TimeSpan SetCacheTime { get; set; }
+    public TimeSpan CacheWriteTime { get; set; }
 
-    public TimeSpan GetDbTime { get; set; }
+    public TimeSpan RepositoryReadTime { get; set; }
 
-    public TimeSpan SetDbTime { get; set; }
+    public TimeSpan RepositoryWriteTime { get; set; }
 
     public void Clear()
     {
@@ -33,9 +33,9 @@ public record Metrics
         IsReadOperation = default;
         SerializationTime = default;
         DeserializationTime = default;
-        GetCacheTime = default;
-        SetCacheTime = default;
-        GetDbTime = default;
-        SetDbTime = default;
+        CacheReadTime = default;
+        CacheWriteTime = default;
+        RepositoryReadTime = default;
+        RepositoryWriteTime = default;
     }
 }

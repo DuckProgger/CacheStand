@@ -15,9 +15,8 @@ public class MetricsCalc
     {
         var averageRequestTime = GetAverageRequestTime();
         var totalRequestTime = GetTotalRequestTime();
-        var averageCacheTime = GetAverageCacheTime();
+        var averageCacheCosts = GetAverageCacheCosts();
         var cacheEfficiency = GetCacheEfficiency();
-        var queryAcceleration = GetQueryAcceleration();
         var hitRate = GetHitRate();
         var rps = strategyType == ExecutionStrategyType.RealTime
             ? GetLastRps()
@@ -25,91 +24,80 @@ public class MetricsCalc
         var totalRequests = GetTotalRequests();
         var totalReadRequests = GetTotalReadRequests();
         var totalCacheHits = GetTotalCacheHits();
-        var setCacheTime = AverageSetCacheTime();
-        var getCacheTime = AverageGetCacheTime();
-        var setDbTime = AverageSetDbTime();
-        var getDbTime = AverageGetDbTime();
-        var serializationTime = AverageSerializationTime();
-        var deserializationTime = AverageDeserializationTime();
+        var averageCacheWriteTime = GetAverageCacheWriteTime();
+        var averageCacheReadTime = GetAverageCacheReadTime();
+        var averageRepositoryWriteTime = GetAverageRepositoryWriteTime();
+        var averageRepositoryReadTime = GetAverageRepositoryReadTime();
+        var serializationTime = GetAverageSerializationTime();
+        var deserializationTime = GetAverageDeserializationTime();
 
         return new MetricsResult()
         {
             AverageRequestTime = averageRequestTime,
             TotalRequestTime = totalRequestTime,
-            AverageCacheTime = averageCacheTime,
+            AverageCacheTime = averageCacheCosts,
             CacheEfficiency = cacheEfficiency,
-            QueryAcceleration = queryAcceleration,
             HitRate = hitRate,
             RequestsPerSecond = rps,
             TotalRequests = totalRequests,
             TotalReadRequests = totalReadRequests,
             TotalCacheHits = totalCacheHits,
-            AverageSetCacheTime = setCacheTime,
-            AverageGetCacheTime = getCacheTime,
-            AverageSetDbTime = setDbTime,
-            AverageGetDbTime = getDbTime,
+            AverageWriteCacheTime = averageCacheWriteTime,
+            AverageReadCacheTime = averageCacheReadTime,
+            AverageRepositoryWriteTime = averageRepositoryWriteTime,
+            AverageRepositoryReadTime = averageRepositoryReadTime,
             AverageSerializationTime = serializationTime,
             AverageDeserializationTime = deserializationTime,
         };
     }
-    
+
     private TimeSpan GetAverageRequestTime()
     {
+        if (Empty()) return TimeSpan.Zero;
         var averagerRequetTimeTicks = metricList
-            .Where(x => x.IsReadOperation)
             .Average(x => x.RequestTime.Ticks);
         return new TimeSpan((long)averagerRequetTimeTicks);
     }
-    
+
     private TimeSpan GetTotalRequestTime()
     {
+        if (Empty()) return TimeSpan.Zero;
         var averagerRequetTimeTicks = metricList
-            .Where(x => x.IsReadOperation)
             .Sum(x => x.RequestTime.Ticks);
         return new TimeSpan((long)averagerRequetTimeTicks);
     }
-    
-    private TimeSpan GetAverageCacheTime()
+
+    private TimeSpan GetAverageCacheCosts()
     {
+        if (Empty()) return TimeSpan.Zero;
         var averagerRequetTimeTicks = metricList
-            .Where(x => x.IsReadOperation)
             .Average(x => x.CacheCosts.Ticks);
         return new TimeSpan((long)averagerRequetTimeTicks);
     }
-    
+
     private double GetCacheEfficiency()
     {
-        //var averageRequestTime = GetAverageRequestTime();
-        //var averageCacheTime = GetAverageCacheTime();
-        //return (averageRequestTime - averageCacheTime) / averageRequestTime * 100.0;
+        if (metricList.All(x => x.CacheCosts == TimeSpan.Zero)) return 0;
         
-        var averageDbTime = AverageGetDbTime();
-        var estimatedTimeWithoutCache = averageDbTime * metricList.Count;
+        var totalRequests = GetTotalRequests();
+
+        var averageRepositoryReadTime = GetAverageRepositoryReadTime();
+        var estimatedRepositoryReadTimeWithoutCache = averageRepositoryReadTime * totalRequests;
+        
+        var averageRepositoryWriteTime = GetAverageRepositoryWriteTime();
+        var estimatedRepositoryWriteTimeWithoutCache = averageRepositoryWriteTime * totalRequests;
+
+        var estimatedRepositoryTimeWithoutCache =
+            estimatedRepositoryReadTimeWithoutCache + estimatedRepositoryWriteTimeWithoutCache;
+
         var requestTimeSumTicks = metricList.Sum(x => x.RequestTime.Ticks);
         var requestTimeSum = new TimeSpan(requestTimeSumTicks);
-        return (estimatedTimeWithoutCache - requestTimeSum) / estimatedTimeWithoutCache * 100.0;
-    }
-
-    //private double GetQueryAcceleration()
-    //{
-    //    var averageQueryTimeWithoutCache = GetAverageQueryTimeWithoutCache();
-    //    var averageQueryTimeWithCache = GetAverageQueryTimeWithCache();
-    //    if (averageQueryTimeWithoutCache == TimeSpan.Zero || averageQueryTimeWithCache == TimeSpan.Zero)
-    //        return 0;
-    //    return (averageQueryTimeWithoutCache - averageQueryTimeWithCache) / averageQueryTimeWithoutCache * 100.0;
-    //}
-    
-    private double GetQueryAcceleration()
-    {
-        var totalQueryTimeWithoutCache = GetTotalQueryTimeWithoutCache();
-        var totalQueryTimeWithCache = GetTotalQueryTimeWithCache();
-        if (totalQueryTimeWithoutCache == TimeSpan.Zero || totalQueryTimeWithCache == TimeSpan.Zero)
-            return 0;
-        return (totalQueryTimeWithoutCache - totalQueryTimeWithCache) / totalQueryTimeWithoutCache * 100.0;
+        return (estimatedRepositoryTimeWithoutCache - requestTimeSum) / estimatedRepositoryTimeWithoutCache * 100.0;
     }
 
     private double GetHitRate()
     {
+        if (!ContainsReadOperation()) return 0;
         var readOperations = metricList
             .Where(x => x.IsReadOperation)
             .ToArray();
@@ -120,7 +108,7 @@ public class MetricsCalc
 
     private int GetAverageRps()
     {
-        if (!metricList.Any()) return 0;
+        if (Empty()) return 0;
         return (int)metricList
             .GroupBy(x => new { x.Timestamp.Day, x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second })
             .Select(x => x.Count())
@@ -129,7 +117,7 @@ public class MetricsCalc
 
     private int GetLastRps()
     {
-        if (!metricList.Any()) return 0;
+        if (Empty()) return 0;
         var lastTimestamp = metricList.MaxBy(x => x.Timestamp)!.Timestamp;
         var lastSecondTimestamp = lastTimestamp.AddSeconds(-1);
         return metricList.Count(x => x.Timestamp > lastSecondTimestamp);
@@ -142,71 +130,51 @@ public class MetricsCalc
 
     private int GetTotalReadRequests()
     {
-        return metricList.Count(x => x.IsReadOperation);
+        return Empty() ? 0 : metricList.Count(x => x.IsReadOperation);
     }
 
     private int GetTotalCacheHits()
     {
-        return metricList.Any(x => x.CacheHit) ? metricList.Count(x => x.CacheHit) : 0;
+        return ContainsCacheHit() ? metricList.Count(x => x.CacheHit) : 0;
     }
 
-    private TimeSpan GetAverageQueryTimeWithoutCache()
+    private TimeSpan GetAverageSerializationTime()
     {
-        //if (metricList.All(x => x.CacheHit || !x.IsReadOperation)) return TimeSpan.Zero;
-        //var cacheMissMetricsTicks = metricList
-        //    .Where(x => !x.CacheHit && x.IsReadOperation)
-        //    .Select(x => x.RequestTime.Ticks - x.CacheCosts.Ticks)
-        //    .Average();
-        //return new TimeSpan((int)cacheMissMetricsTicks);
-
-        var averageQueryTime = metricList
-            .Where(x => !x.CacheHit)
-            .Select(x => x.SetDbTime.Ticks + x.GetDbTime.Ticks)
-            .Average();
-        return new TimeSpan((int)averageQueryTime);
+        return Empty() ? TimeSpan.Zero : new TimeSpan((int)metricList.Average(x => x.SerializationTime.Ticks));
     }
-    
-    private TimeSpan GetAverageQueryTimeWithCache()
+
+    private TimeSpan GetAverageDeserializationTime()
     {
-        //if (metricList.All(x => !x.CacheHit || !x.IsReadOperation)) return TimeSpan.Zero;
-        //var cacheHitMetricsTicks = metricList
-        //    .Where(x => x.CacheHit && x.IsReadOperation)
-        //    .Select(x => x.RequestTime.Ticks)
-        //    .Average();
-        //return new TimeSpan((int)cacheHitMetricsTicks);
-        var averageQueryTime = metricList
-            //.Where(x => x.CacheHit)
-            .Select(x => x.GetCacheTime.Ticks + x.SetCacheTime.Ticks + x.SerializationTime.Ticks + x.DeserializationTime.Ticks)
-            .Average();
-        return new TimeSpan((int)averageQueryTime);
+        return Empty() ? TimeSpan.Zero : new TimeSpan((int)metricList.Average(x => x.DeserializationTime.Ticks));
     }
-    
-    private TimeSpan GetTotalQueryTimeWithoutCache()
+
+    private TimeSpan GetAverageCacheReadTime()
     {
-        var averageQueryTime = metricList
-            .Where(x => !x.CacheHit)
-            .Select(x => x.SetDbTime.Ticks + x.GetDbTime.Ticks)
-            .Sum();
-        return new TimeSpan((int)averageQueryTime);
+        return Empty() ? TimeSpan.Zero : new TimeSpan((int)metricList.Average(x => x.CacheReadTime.Ticks));
     }
-    
-    private TimeSpan GetTotalQueryTimeWithCache()
+
+    private TimeSpan GetAverageCacheWriteTime()
     {
-        var averageQueryTime = metricList
-            .Select(x => x.GetCacheTime.Ticks + x.SetCacheTime.Ticks + x.SerializationTime.Ticks + x.DeserializationTime.Ticks)
-            .Sum();
-        return new TimeSpan((int)averageQueryTime);
+        return Empty() ? TimeSpan.Zero : new TimeSpan((int)metricList.Average(x => x.CacheWriteTime.Ticks));
     }
 
-    private TimeSpan AverageSerializationTime() => new((int)metricList.Average(x => x.SerializationTime.Ticks));
+    private TimeSpan GetAverageRepositoryReadTime()
+    {
+        return Empty() || metricList.All(x => x.CacheHit)
+            ? TimeSpan.Zero
+            : new TimeSpan((int)metricList.Where(x => !x.CacheHit).Average(x => x.RepositoryReadTime.Ticks));
+    }
 
-    private TimeSpan AverageDeserializationTime() => new((int)metricList.Average(x => x.DeserializationTime.Ticks));
+    private TimeSpan GetAverageRepositoryWriteTime()
+    {
+        return Empty()
+            ? TimeSpan.Zero
+            : new TimeSpan((int)metricList.Average(x => x.RepositoryWriteTime.Ticks));
+    }
 
-    private TimeSpan AverageGetCacheTime() => new((int)metricList.Average(x => x.GetCacheTime.Ticks));
+    private bool Empty() => !metricList.Any();
 
-    private TimeSpan AverageSetCacheTime() => new((int)metricList.Average(x => x.SetCacheTime.Ticks));
+    private bool ContainsReadOperation() => metricList.Any(x => x.IsReadOperation);
 
-    private TimeSpan AverageGetDbTime() => new((int)metricList.Where(x => !x.CacheHit).Average(x => x.GetDbTime.Ticks));
-
-    private TimeSpan AverageSetDbTime() => new((int)metricList.Where(x => !x.CacheHit).Average(x => x.SetDbTime.Ticks));
+    private bool ContainsCacheHit() => metricList.Any(x => x.CacheHit);
 }

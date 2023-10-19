@@ -8,24 +8,24 @@ public class MetricsConsoleWriter : IMetricsWriter
     {
         System.Console.Clear();
         System.Console.WriteLine($"""
-                                  TotalRequestTime:    {metricsResult.TotalRequestTime}
-                                  AverageRequestTime:  {metricsResult.AverageRequestTime.TotalMicroseconds} мкс
-                                  AverageCacheTime:    {metricsResult.AverageCacheTime.TotalMicroseconds} мкс
-                                  CacheEfficiency:     {metricsResult.CacheEfficiency:.##} %
-                                  Hit rate:            {metricsResult.HitRate:.##} %
-                                  RPS:                 {metricsResult.RequestsPerSecond}
-                                  Total requests:      {metricsResult.TotalRequests}
-                                  Total read requests: {metricsResult.TotalReadRequests}
-                                  Total hits:          {metricsResult.TotalCacheHits}
+                                  Total request time:...{metricsResult.TotalRequestTime}
+                                  Average request time:.{metricsResult.AverageRequestTime.TotalMicroseconds} мкс
+                                  Average cache costs:..{metricsResult.AverageCacheTime.TotalMicroseconds} мкс
+                                  Cache efficiency:.....{metricsResult.CacheEfficiency:.##} %
+                                  Hit rate:.............{metricsResult.HitRate:.##} %
+                                  RPS:..................{metricsResult.RequestsPerSecond}
+                                  Total requests:.......{metricsResult.TotalRequests}
+                                  Total read requests:..{metricsResult.TotalReadRequests}
+                                  Total hits:...........{metricsResult.TotalCacheHits}
                                   """);
         System.Console.WriteLine();
         System.Console.WriteLine($"""
-                                  Average GetDbTime:           {metricsResult.AverageGetDbTime.TotalMicroseconds} мкс
-                                  Average SetDbTime:           {metricsResult.AverageSetDbTime.TotalMicroseconds} мкс
-                                  Average GetCacheTime:        {metricsResult.AverageGetCacheTime.TotalMicroseconds} мкс
-                                  Average SetCacheTime:        {metricsResult.AverageSetCacheTime.TotalMicroseconds} мкс
-                                  Average SerializationTime:   {metricsResult.AverageSerializationTime.TotalMicroseconds} мкс
-                                  Average DeserializationTime: {metricsResult.AverageDeserializationTime.TotalMicroseconds} мкс
+                                  Average repository read time:..{metricsResult.AverageRepositoryReadTime.TotalMicroseconds} мкс
+                                  Average cache read time:.......{metricsResult.AverageReadCacheTime.TotalMicroseconds} мкс
+                                  Average deserialization time:..{metricsResult.AverageDeserializationTime.TotalMicroseconds} мкс
+                                  Average repository write time:.{metricsResult.AverageRepositoryWriteTime.TotalMicroseconds} мкс
+                                  Average cache write time:......{metricsResult.AverageWriteCacheTime.TotalMicroseconds} мкс
+                                  Average serialization time:....{metricsResult.AverageSerializationTime.TotalMicroseconds} мкс
                                   """);
     }
 }
