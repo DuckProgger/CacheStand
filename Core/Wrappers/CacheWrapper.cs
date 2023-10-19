@@ -1,18 +1,17 @@
-﻿using System.Diagnostics;
-using Core.Metric;
+﻿using Core.Metric;
 using Core.Utils;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
 namespace Core.Wrappers;
 
-public class DistributedCacheWrapper : IDistributedCacheWrapper
+public class CacheWrapper : ICacheWrapper
 {
     private readonly IDistributedCache cache;
     private readonly DistributedCacheEntryOptions options;
     private readonly Metrics metrics;
 
-    public DistributedCacheWrapper(IDistributedCache cache, DistributedCacheEntryOptions options, Metrics metrics)
+    public CacheWrapper(IDistributedCache cache, DistributedCacheEntryOptions options, Metrics metrics)
     {
         this.cache = cache;
         this.options = options;

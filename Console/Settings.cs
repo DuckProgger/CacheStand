@@ -53,6 +53,8 @@ public static class Settings
 
     public static class CacheOptions
     {
+        public static bool Enabled => bool.Parse(config["CacheOptions:Enabled"]!);
+        
         public static TimeSpan SlidingExpiration => TimeSpan.FromSeconds(int.Parse(config["CacheOptions:SlidingExpirationSeconds"]!));
     }
 

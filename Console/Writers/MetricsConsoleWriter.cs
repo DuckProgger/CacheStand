@@ -8,7 +8,7 @@ public class MetricsConsoleWriter : IMetricsWriter
     {
         System.Console.Clear();
         System.Console.WriteLine($"""
-                                  TotalRequestTime:  {metricsResult.TotalRequestTime}
+                                  TotalRequestTime:    {metricsResult.TotalRequestTime}
                                   AverageRequestTime:  {metricsResult.AverageRequestTime.TotalMicroseconds} мкс
                                   AverageCacheTime:    {metricsResult.AverageCacheTime.TotalMicroseconds} мкс
                                   CacheEfficiency:     {metricsResult.CacheEfficiency:.##} %

@@ -1,6 +1,6 @@
 ﻿namespace Core.Wrappers;
 
-public interface IDistributedCacheWrapper
+public interface ICacheWrapper
 {
     Task<TValue?> GetValueAsync<TValue>(string key);
 

@@ -20,24 +20,15 @@ public static class ExecutionStrategyFactory
         var repository = await CreateRespository(Settings.RepositoryType);
         await SeedData(repository);
 
-        var cache = CreateCache(Settings.CacheType);
-
         var metrics = new Metrics();
         var metricsStorage = new MetricsStorage();
-
-        var cacheWrapper = new DistributedCacheWrapper(cache, new DistributedCacheEntryOptions()
-        {
-            SlidingExpiration = Settings.CacheOptions.SlidingExpiration
-        }, metrics);
-        var cacheWrapperProxy = new DistributedCacheWrapperProxy(cacheWrapper, metrics);
-
-        var repositoryProxyInner = new DistributedCacheRepositoryProxy(repository, cacheWrapperProxy, metrics);
-        var repositoryProxyOuter = new RequestTimeMeasurmentRepositoryProxy(repositoryProxyInner, metrics);
+        
+        var repositoryProxy = CreateRepositoryProxy(repository, metrics);
 
         var executionType = Settings.ExecutionOptions.ExecutionType;
         return executionType switch
         {
-            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repositoryProxyOuter, metricsStorage,
+            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repositoryProxy, metricsStorage,
                 metrics,
                 new IterationExecutionOptions()
                 {
@@ -45,7 +36,7 @@ public static class ExecutionStrategyFactory
                     RequestsCount = Settings.ExecutionOptions.Iteration.RequestsCount,
                     UpdateOperationProbable = Settings.ExecutionOptions.UpdateOperationProbable
                 }),
-            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repositoryProxyOuter, metricsStorage,
+            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repositoryProxy, metricsStorage,
                 metrics,
                 new RealTimeExecutionOptions()
                 {
@@ -56,6 +47,24 @@ public static class ExecutionStrategyFactory
                 }),
             _ => throw new ArgumentOutOfRangeException(nameof(executionType), executionType, null)
         };
+    }
+
+    private static IRepository CreateRepositoryProxy(IRepository repository, Metrics metrics)
+    {
+        var repositoryTimeMeasurmentProxy = new RepositoryTimeMeasurmentProxy(repository, metrics);
+
+        if (!Settings.CacheOptions.Enabled) 
+            return new RequestTimeMeasurmentRepositoryProxy(repositoryTimeMeasurmentProxy, metrics);
+        
+        var cache = CreateCache(Settings.CacheType);
+        var cacheWrapper = new CacheWrapper(cache, new DistributedCacheEntryOptions()
+        {
+            SlidingExpiration = Settings.CacheOptions.SlidingExpiration
+        }, metrics);
+        var cacheWrapperProxy = new CacheWrapperProxy(cacheWrapper, metrics);
+        var cacheRepositoryProxy = new CacheRepositoryProxy(repositoryTimeMeasurmentProxy, cacheWrapperProxy);
+
+        return new RequestTimeMeasurmentRepositoryProxy(cacheRepositoryProxy, metrics);
     }
 
     private static async Task<IRepository> CreateRespository(RepositoryType repositoryType)

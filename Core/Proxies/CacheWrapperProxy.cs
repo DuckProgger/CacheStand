@@ -4,12 +4,12 @@ using Core.Wrappers;
 
 namespace Core.Proxies;
 
-public class DistributedCacheWrapperProxy : IDistributedCacheWrapper
+public class CacheWrapperProxy : ICacheWrapper
 {
-    private readonly IDistributedCacheWrapper cacheWrapper;
+    private readonly ICacheWrapper cacheWrapper;
     private readonly Metrics metrics;
 
-    public DistributedCacheWrapperProxy(IDistributedCacheWrapper cacheWrapper, Metrics metrics)
+    public CacheWrapperProxy(ICacheWrapper cacheWrapper, Metrics metrics)
     {
         this.cacheWrapper = cacheWrapper;
         this.metrics = metrics;
