@@ -28,10 +28,10 @@ public static class ExecutionStrategyFactory
         var cacheWrapper = new DistributedCacheWrapper(cache, new DistributedCacheEntryOptions()
         {
             SlidingExpiration = Settings.CacheOptions.SlidingExpiration
-        });
+        }, metrics);
         var cacheWrapperProxy = new DistributedCacheWrapperProxy(cacheWrapper, metrics);
 
-        var repositoryProxyInner = new DistributedCacheRepositoryProxy(repository, cacheWrapperProxy);
+        var repositoryProxyInner = new DistributedCacheRepositoryProxy(repository, cacheWrapperProxy, metrics);
         var repositoryProxyOuter = new RequestTimeMeasurmentRepositoryProxy(repositoryProxyInner, metrics);
 
         var executionType = Settings.ExecutionOptions.ExecutionType;

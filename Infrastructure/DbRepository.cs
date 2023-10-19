@@ -22,6 +22,8 @@ public class DbRepository : IRepository
 
     public async Task<Entry?> Get(int id)
     {
+        //await Task.Delay(1);
+        dbContext.ChangeTracker.Clear();
         return await Items
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == id)
