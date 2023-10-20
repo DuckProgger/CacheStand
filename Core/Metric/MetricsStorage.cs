@@ -1,15 +1,17 @@
-﻿namespace Core.Metric;
+﻿using System.Collections.Concurrent;
+
+namespace Core.Metric;
 
 public class MetricsStorage
 {
-    private readonly List<Metrics> metricList = new();
+    private readonly ConcurrentBag<Metrics> metricList = new();
 
     public void Add(Metrics metrics)
     {
         metricList.Add(metrics);
     }
 
-    public IEnumerable<Metrics> GetAll() => metricList.AsReadOnly();
+    public IEnumerable<Metrics> GetAll() => metricList;
 
     public IEnumerable<Metrics> GetSlice(DateTime from, DateTime to)
     {

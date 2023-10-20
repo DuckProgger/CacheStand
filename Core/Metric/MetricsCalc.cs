@@ -78,14 +78,12 @@ public class MetricsCalc
     private double GetCacheEfficiency()
     {
         if (metricList.All(x => x.CacheCosts == TimeSpan.Zero)) return 0;
-        
-        var totalRequests = GetTotalRequests();
 
         var averageRepositoryReadTime = GetAverageRepositoryReadTime();
-        var estimatedRepositoryReadTimeWithoutCache = averageRepositoryReadTime * totalRequests;
-        
+        var estimatedRepositoryReadTimeWithoutCache = averageRepositoryReadTime * GetTotalReadRequests();
+
         var averageRepositoryWriteTime = GetAverageRepositoryWriteTime();
-        var estimatedRepositoryWriteTimeWithoutCache = averageRepositoryWriteTime * totalRequests;
+        var estimatedRepositoryWriteTimeWithoutCache = averageRepositoryWriteTime * GetTotalWriteRequests();
 
         var estimatedRepositoryTimeWithoutCache =
             estimatedRepositoryReadTimeWithoutCache + estimatedRepositoryWriteTimeWithoutCache;
@@ -133,6 +131,11 @@ public class MetricsCalc
         return Empty() ? 0 : metricList.Count(x => x.IsReadOperation);
     }
 
+    private int GetTotalWriteRequests()
+    {
+        return Empty() ? 0 : metricList.Count(x => !x.IsReadOperation);
+    }
+
     private int GetTotalCacheHits()
     {
         return ContainsCacheHit() ? metricList.Count(x => x.CacheHit) : 0;
@@ -160,21 +163,27 @@ public class MetricsCalc
 
     private TimeSpan GetAverageRepositoryReadTime()
     {
-        return Empty() || metricList.All(x => x.CacheHit)
+        return Empty() || metricList.All(x => x.CacheHit) || !ContainsReadOperation()
             ? TimeSpan.Zero
-            : new TimeSpan((int)metricList.Where(x => !x.CacheHit).Average(x => x.RepositoryReadTime.Ticks));
+            : new TimeSpan((int)metricList
+                .Where(x => !x.CacheHit && x.IsReadOperation)
+                .Average(x => x.RepositoryReadTime.Ticks));
     }
 
     private TimeSpan GetAverageRepositoryWriteTime()
     {
-        return Empty()
+        return Empty() || !ContainsWriteOperation()
             ? TimeSpan.Zero
-            : new TimeSpan((int)metricList.Average(x => x.RepositoryWriteTime.Ticks));
+            : new TimeSpan((int)metricList
+                .Where(x => !x.IsReadOperation)
+                .Average(x => x.RepositoryWriteTime.Ticks));
     }
 
     private bool Empty() => !metricList.Any();
 
     private bool ContainsReadOperation() => metricList.Any(x => x.IsReadOperation);
+
+    private bool ContainsWriteOperation() => metricList.Any(x => !x.IsReadOperation);
 
     private bool ContainsCacheHit() => metricList.Any(x => x.CacheHit);
 }
