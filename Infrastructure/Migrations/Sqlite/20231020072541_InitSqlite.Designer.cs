@@ -7,17 +7,17 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Infrastructure.Migrations
+namespace Infrastructure.Migrations.Sqlite
 {
-    [DbContext(typeof(ApplicationContext))]
-    [Migration("20231017075523_Init")]
-    partial class Init
+    [DbContext(typeof(SqliteContext))]
+    [Migration("20231020072541_InitSqlite")]
+    partial class InitSqlite
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.2");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.12");
 
             modelBuilder.Entity("Core.Data.Entry", b =>
                 {

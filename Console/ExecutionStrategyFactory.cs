@@ -73,14 +73,15 @@ public static class ExecutionStrategyFactory
 
     private static async Task<IRepository> CreateRepository(RepositoryType repositoryType)
     {
+        System.Console.WriteLine($"Create {repositoryType} Repository...");
         switch (repositoryType)
         {
             case RepositoryType.InMemory:
-                System.Console.WriteLine("Create InMemory Repository...");
                 return new InMemoryRepository();
-            case RepositoryType.SqLite:
-                System.Console.WriteLine("Create SqLite Repository...");
-                var dbContext = ApplicationContextFactory.CreateDbContext();
+            case RepositoryType.SqLite or RepositoryType.PostgreSql:
+                var dbContext = repositoryType == RepositoryType.PostgreSql
+                ? (ApplicationContext)PostgresContextFactory.CreateDbContext()
+                : (ApplicationContext)SqliteContextFactory.CreateDbContext();
                 var database = dbContext.Database;
                 if (Settings.RepositoryOptions.ClearDatabase)
                 {
@@ -103,12 +104,12 @@ public static class ExecutionStrategyFactory
                 return new MemoryDistributedCache(
                     new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions()));
             case CacheType.Redis:
-                var redis = ConnectionMultiplexer.Connect($"{Settings.ConnectionStrings.Cache},allowAdmin=true");
-                var server = redis.GetServer(Settings.ConnectionStrings.Cache);
+                var redis = ConnectionMultiplexer.Connect($"{Settings.ConnectionStrings.Redis},allowAdmin=true");
+                var server = redis.GetServer(Settings.ConnectionStrings.Redis);
                 server.FlushDatabase();
                 return new RedisCache(new RedisCacheOptions()
                 {
-                    Configuration = Settings.ConnectionStrings.Cache,
+                    Configuration = Settings.ConnectionStrings.Redis,
                 });
             default:
                 throw new ArgumentOutOfRangeException(nameof(cacheType), cacheType, null);

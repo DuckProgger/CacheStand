@@ -69,8 +69,10 @@ public static class Settings
 
     public static class ConnectionStrings
     {
-        public static string Database => config["ConnectionStrings:Database"]!;
+        public static string Sqlite => config["ConnectionStrings:Sqlite"]!;
+        
+        public static string PostgreSql => config["ConnectionStrings:PostgreSQL"]!;
 
-        public static string Cache => config["ConnectionStrings:Cache"]!;
+        public static string Redis => config["ConnectionStrings:Redis"]!;
     }
 }

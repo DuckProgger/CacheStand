@@ -1,24 +1,32 @@
 ﻿using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Logging;
 
 namespace Console;
 
-/// <summary>
-/// Фабрика создания контекста для Dependency Injection.
-/// </summary>
-public class ApplicationContextFactory : IDesignTimeDbContextFactory<ApplicationContext>
+public class PostgresContextFactory : IDesignTimeDbContextFactory<PostgresContext>
 {
-    public static ApplicationContext CreateDbContext()
+    public static PostgresContext CreateDbContext()
     {
-        return new ApplicationContext(
-            new DbContextOptionsBuilder<ApplicationContext>()
-                .UseSqlite(Settings.ConnectionStrings.Database)
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                //.EnableSensitiveDataLogging()
-                //.LogTo(System.Console.WriteLine, LogLevel.Information)
-                .Options);
+        var builder = new DbContextOptionsBuilder<ApplicationContext>();
+        //builder.EnableSensitiveDataLogging().LogTo(System.Console.WriteLine, LogLevel.Information);
+        builder.UseNpgsql(Settings.ConnectionStrings.PostgreSql);
+        return new PostgresContext(builder.Options);
     }
 
-    public ApplicationContext CreateDbContext(string[] args) => CreateDbContext();
+    public PostgresContext CreateDbContext(string[] args) => CreateDbContext();
+}
+
+public class SqliteContextFactory : IDesignTimeDbContextFactory<SqliteContext>
+{
+    public static SqliteContext CreateDbContext()
+    {
+        var builder = new DbContextOptionsBuilder<ApplicationContext>();
+        //builder.EnableSensitiveDataLogging().LogTo(System.Console.WriteLine, LogLevel.Information);
+        builder.UseSqlite(Settings.ConnectionStrings.Sqlite);
+        return new SqliteContext(builder.Options);
+    }
+
+    public SqliteContext CreateDbContext(string[] args) => CreateDbContext();
 }
