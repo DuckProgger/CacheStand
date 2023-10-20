@@ -17,15 +17,18 @@ public static class ExecutionStrategyFactory
 {
     public static async Task<ExecutionStrategy> CreateExecutionStrategy()
     {
-        var repository = await CreateRepository(Settings.RepositoryType);
+        var repository = await CreateRepository(Settings.RepositoryOptions.RepositoryType);
+
+        System.Console.WriteLine("Seed data...");
         await SeedData(repository);
 
         var metrics = new Metrics();
         var metricsStorage = new MetricsStorage();
-        
+
         var repositoryProxy = CreateRepositoryProxy(repository, metrics);
 
         var executionType = Settings.ExecutionOptions.ExecutionType;
+        System.Console.WriteLine($"Creating ExecutionStrategy with type = {executionType}...");
         return executionType switch
         {
             ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repositoryProxy, metricsStorage,
@@ -53,10 +56,11 @@ public static class ExecutionStrategyFactory
     {
         var repositoryTimeMeasurmentProxy = new RepositoryTimeMeasurmentProxy(repository, metrics);
 
-        if (!Settings.CacheOptions.Enabled) 
+        if (!Settings.CacheOptions.Enabled)
             return new RequestTimeMeasurmentRepositoryProxy(repositoryTimeMeasurmentProxy, metrics);
-        
-        var cache = CreateCache(Settings.CacheType);
+
+        System.Console.WriteLine("Using cache...");
+        var cache = CreateCache(Settings.CacheOptions.CacheType);
         var cacheWrapper = new CacheWrapper(cache, new DistributedCacheEntryOptions()
         {
             SlidingExpiration = Settings.CacheOptions.SlidingExpiration
@@ -72,10 +76,19 @@ public static class ExecutionStrategyFactory
         switch (repositoryType)
         {
             case RepositoryType.InMemory:
+                System.Console.WriteLine("Create InMemory Repository...");
                 return new InMemoryRepository();
             case RepositoryType.SqLite:
+                System.Console.WriteLine("Create SqLite Repository...");
                 var dbContext = ApplicationContextFactory.CreateDbContext();
-                await dbContext.Database.MigrateAsync();
+                var database = dbContext.Database;
+                if (Settings.RepositoryOptions.ClearDatabase)
+                {
+                    System.Console.WriteLine("Delete data from DB...");
+                    await database.EnsureDeletedAsync();
+                }
+                System.Console.WriteLine("Migrate DB...");
+                await database.MigrateAsync();
                 return new DbRepository(dbContext);
             default:
                 throw new ArgumentOutOfRangeException();

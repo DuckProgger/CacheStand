@@ -53,19 +53,24 @@ public static class Settings
 
     public static class CacheOptions
     {
+        public static CacheType CacheType => Enum.Parse<CacheType>(config["CacheOptions:CacheType"]!);
+
         public static bool Enabled => bool.Parse(config["CacheOptions:Enabled"]!);
-        
+
         public static TimeSpan SlidingExpiration => TimeSpan.FromSeconds(int.Parse(config["CacheOptions:SlidingExpirationSeconds"]!));
+    }
+
+    public static class RepositoryOptions
+    {
+        public static RepositoryType RepositoryType => Enum.Parse<RepositoryType>(config["RepositoryOptions:RepositoryType"]!);
+
+        public static bool ClearDatabase => bool.Parse(config["RepositoryOptions:ClearDatabase"]!);
     }
 
     public static class ConnectionStrings
     {
         public static string Database => config["ConnectionStrings:Database"]!;
-        
+
         public static string Cache => config["ConnectionStrings:Cache"]!;
     }
-    
-    public static RepositoryType RepositoryType => Enum.Parse<RepositoryType>(config["RepositoryType"]!);
-    
-    public static CacheType CacheType => Enum.Parse<CacheType>(config["CacheType"]!);
 }

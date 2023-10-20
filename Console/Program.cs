@@ -12,6 +12,7 @@ internal class Program
         var metricsCsvWriter = new MetricsCsvWriter(logPath);
         executionStrategy.ResultReceived += metricsConsoleWriter.Write;
         executionStrategy.ResultReceived += metricsCsvWriter.Write;
+        System.Console.WriteLine("Starting requests...");
         await executionStrategy.Invoke();
 
         System.Console.ReadKey();

@@ -1,12 +1,13 @@
 ﻿using Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace Console;
 
 /// <summary>
 /// Фабрика создания контекста для Dependency Injection.
 /// </summary>
-public class ApplicationContextFactory
+public class ApplicationContextFactory : IDesignTimeDbContextFactory<ApplicationContext>
 {
     public static ApplicationContext CreateDbContext()
     {
@@ -18,4 +19,6 @@ public class ApplicationContextFactory
                 //.LogTo(System.Console.WriteLine, LogLevel.Information)
                 .Options);
     }
+
+    public ApplicationContext CreateDbContext(string[] args) => CreateDbContext();
 }
