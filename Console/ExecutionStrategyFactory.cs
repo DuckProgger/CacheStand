@@ -19,7 +19,6 @@ public static class ExecutionStrategyFactory
     {
         var repository = await CreateRepository(Settings.RepositoryOptions.RepositoryType);
 
-        System.Console.WriteLine("Seed data...");
         await SeedData(repository);
 
         var metrics = new Metrics();
@@ -57,7 +56,10 @@ public static class ExecutionStrategyFactory
         var repositoryTimeMeasurmentProxy = new RepositoryTimeMeasurmentProxy(repository, metrics);
 
         if (!Settings.CacheOptions.Enabled)
+        {
+            System.Console.WriteLine("Without cache...");
             return new RequestTimeMeasurmentRepositoryProxy(repositoryTimeMeasurmentProxy, metrics);
+        }
 
         System.Console.WriteLine("Using cache...");
         var cache = CreateCache(Settings.CacheOptions.CacheType);
@@ -119,6 +121,7 @@ public static class ExecutionStrategyFactory
     private static async Task SeedData(IRepository repository)
     {
         if (await repository.Get(1) is not null) return;
+        System.Console.WriteLine("Seed data...");
         var entries = Seed.GetData(new SeedOptions()
         {
             DataCount = Settings.Seeding.DataCount,
