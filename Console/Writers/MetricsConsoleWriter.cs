@@ -45,10 +45,10 @@ public class MetricsConsoleWriter : IMetricsWriter
             new ConsoleTableConsoleWriter.Cell($"{metricsResult.AverageCacheTime.TotalMicroseconds} мкс", timeMetricsColor));
         tableConsoleWriter.AppendRow(
             new ConsoleTableConsoleWriter.Cell("Average repository read time", timeMetricsColor),
-            new ConsoleTableConsoleWriter.Cell($"{metricsResult.AverageRepositoryReadTime.TotalMicroseconds} мкс", timeMetricsColor));
+            new ConsoleTableConsoleWriter.Cell($"{metricsResult.AverageRepositoryReadTime.TotalMicroseconds} мкс", ConsoleColor.DarkRed));
         tableConsoleWriter.AppendRow(
             new ConsoleTableConsoleWriter.Cell("Average cache read time", timeMetricsColor),
-            new ConsoleTableConsoleWriter.Cell($"{metricsResult.AverageReadCacheTime.TotalMicroseconds} мкс", timeMetricsColor));
+            new ConsoleTableConsoleWriter.Cell($"{metricsResult.AverageReadCacheTime.TotalMicroseconds} мкс", ConsoleColor.DarkRed));
         tableConsoleWriter.AppendRow(
             new ConsoleTableConsoleWriter.Cell("Average deserialization time", timeMetricsColor),
             new ConsoleTableConsoleWriter.Cell($"{metricsResult.AverageDeserializationTime.TotalMicroseconds} мкс", timeMetricsColor));

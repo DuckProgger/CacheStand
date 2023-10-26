@@ -106,9 +106,15 @@ public static class ExecutionStrategyFactory
                 return new MemoryDistributedCache(
                     new OptionsWrapper<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions()));
             case CacheType.Redis:
-                var redis = ConnectionMultiplexer.Connect($"{Settings.ConnectionStrings.Redis},allowAdmin=true");
-                var server = redis.GetServer(Settings.ConnectionStrings.Redis);
+                var options = new ConfigurationOptions()
+                {
+                    EndPoints = {Settings.ConnectionStrings.Redis},
+                    AllowAdmin = true
+                };
+                var muxer = ConnectionMultiplexer.Connect(options);
+                var server = muxer.GetServer(Settings.ConnectionStrings.Redis);
                 server.FlushDatabase();
+                server.ConfigSet("save", "");
                 return new RedisCache(new RedisCacheOptions()
                 {
                     Configuration = Settings.ConnectionStrings.Redis,

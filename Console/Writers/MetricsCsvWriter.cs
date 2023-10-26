@@ -16,15 +16,22 @@ internal class MetricsCsvWriter
     public void Write(MetricsResult data)
     {
         var strData =
-            $"{data.TotalRequestTime};" +
-            $"{data.AverageRequestTime};" +
-            $"{data.AverageCacheTime};" +
             $"{data.CacheEfficiency};" +
             $"{data.HitRate};" +
             $"{data.RequestsPerSecond};" +
             $"{data.TotalRequests};" +
             $"{data.TotalReadRequests};" +
             $"{data.TotalCacheHits}" +
+            $"{data.TotalRequestTime};" +
+            $"{data.AverageRequestTime.TotalMicroseconds};" +
+            $"{data.AverageCacheTime.TotalMicroseconds};" +
+            $"{data.AverageRepositoryReadTime.TotalMicroseconds};" +
+            $"{data.AverageReadCacheTime.TotalMicroseconds};" +
+            $"{data.AverageDeserializationTime.TotalMicroseconds};" +
+            $"{data.AverageRepositoryWriteTime.TotalMicroseconds};" +
+            $"{data.AverageWriteCacheTime.TotalMicroseconds};" +
+            $"{data.AverageSerializationTime.TotalMicroseconds};" +
+
             $"{Environment.NewLine}";
         File.AppendAllText(path, strData);
     }
@@ -32,15 +39,21 @@ internal class MetricsCsvWriter
     private void WriteHeader()
     {
         var strHeader =
-        $"{nameof(MetricsResult.TotalRequestTime)};" +
-        $"{nameof(MetricsResult.AverageRequestTime)};" +
-        $"{nameof(MetricsResult.AverageCacheTime)};" +
         $"{nameof(MetricsResult.CacheEfficiency)};" +
         $"{nameof(MetricsResult.HitRate)};" +
         $"{nameof(MetricsResult.RequestsPerSecond)};" +
         $"{nameof(MetricsResult.TotalRequests)};" +
         $"{nameof(MetricsResult.TotalReadRequests)};" +
         $"{nameof(MetricsResult.TotalCacheHits)}" +
+        $"{nameof(MetricsResult.TotalRequestTime)};" +
+        $"{nameof(MetricsResult.AverageRequestTime)};" +
+        $"{nameof(MetricsResult.AverageCacheTime)};" +
+        $"{nameof(MetricsResult.AverageRepositoryReadTime)};" +
+        $"{nameof(MetricsResult.AverageReadCacheTime)};" +
+        $"{nameof(MetricsResult.AverageDeserializationTime)};" +
+        $"{nameof(MetricsResult.AverageRepositoryWriteTime)};" +
+        $"{nameof(MetricsResult.AverageWriteCacheTime)};" +
+        $"{nameof(MetricsResult.AverageSerializationTime)};" +
         $"{Environment.NewLine}";
         File.AppendAllText(path, strHeader);
     }
