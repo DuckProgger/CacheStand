@@ -1,6 +1,6 @@
 ﻿namespace Core.Metric;
 
-public record Metrics
+public struct Metrics
 {
     public TimeSpan RequestTime { get; set; }
 
@@ -23,19 +23,4 @@ public record Metrics
     public TimeSpan RepositoryReadTime { get; set; }
 
     public TimeSpan RepositoryWriteTime { get; set; }
-
-    public void Clear()
-    {
-        RequestTime = default;
-        CacheCosts = default;
-        CacheHit = default;
-        Timestamp = default;
-        IsReadOperation = default;
-        SerializationTime = default;
-        DeserializationTime = default;
-        CacheReadTime = default;
-        CacheWriteTime = default;
-        RepositoryReadTime = default;
-        RepositoryWriteTime = default;
-    }
 }

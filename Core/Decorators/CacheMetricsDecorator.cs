@@ -2,25 +2,25 @@
 using Core.Utils;
 using Core.Wrappers;
 
-namespace Core.Proxies;
+namespace Core.Decorators;
 
-public class CacheWrapperProxy : ICacheWrapper
+public class CacheMetricsDecorator : ICacheWrapper
 {
     private readonly ICacheWrapper cacheWrapper;
-    private readonly Metrics metrics;
+    private readonly MetricsWriter metricsWriter;
 
-    public CacheWrapperProxy(ICacheWrapper cacheWrapper, Metrics metrics)
+    public CacheMetricsDecorator(ICacheWrapper cacheWrapper, MetricsWriter metricsWriter)
     {
         this.cacheWrapper = cacheWrapper;
-        this.metrics = metrics;
+        this.metricsWriter = metricsWriter;
     }
 
     public async Task<TValue?> GetValueAsync<TValue>(string key)
     {
         using var profiler = new Profiler();
         var entry = await cacheWrapper.GetValueAsync<TValue>(key);
-        metrics.CacheCosts += profiler.ElapsedTime;
-        metrics.CacheHit = entry is not null;
+        metricsWriter.AddCacheCosts(profiler.ElapsedTime);
+        metricsWriter.WriteCacheHit(entry is not null);
         return entry;
     }
 
@@ -28,6 +28,6 @@ public class CacheWrapperProxy : ICacheWrapper
     {
         using var profiler = new Profiler();
         await cacheWrapper.SetValueAsync(key, value);
-        metrics.CacheCosts += profiler.ElapsedTime;
+        metricsWriter.AddCacheCosts(profiler.ElapsedTime);
     }
 }

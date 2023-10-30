@@ -10,7 +10,7 @@ public class RealTimeExecutionStrategy : ExecutionStrategy
 
     public RealTimeExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
-        Metrics metrics,
+        MetricsWriter metrics,
         RealTimeExecutionOptions options) : base(repository, metricsStorage, metrics, options)
     {
         this.options = options;

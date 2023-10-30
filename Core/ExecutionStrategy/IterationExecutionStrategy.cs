@@ -9,8 +9,8 @@ public class IterationExecutionStrategy : ExecutionStrategy
 
     public IterationExecutionStrategy(IRepository repository,
         MetricsStorage metricsStorage,
-        Metrics metrics,
-        IterationExecutionOptions options) : base(repository, metricsStorage, metrics, options)
+        MetricsWriter metricsWriter,
+        IterationExecutionOptions options) : base(repository, metricsStorage, metricsWriter, options)
     {
         this.options = options;
     }

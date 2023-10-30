@@ -1,14 +1,14 @@
 ﻿using Core.Data;
 using Core.Wrappers;
 
-namespace Core.Proxies;
+namespace Core.Decorators;
 
-public class CacheRepositoryProxy : IRepository
+public class CachedRepositoryDecorator : IRepository
 {
     private readonly IRepository repository;
     private readonly ICacheWrapper cacheWrapper;
 
-    public CacheRepositoryProxy(IRepository repository, ICacheWrapper cacheWrapper)
+    public CachedRepositoryDecorator(IRepository repository, ICacheWrapper cacheWrapper)
     {
         this.repository = repository;
         this.cacheWrapper = cacheWrapper;

@@ -1,7 +1,7 @@
 ﻿using Core.Data;
+using Core.Decorators;
 using Core.ExecutionStrategy;
 using Core.Metric;
-using Core.Proxies;
 using Core.Wrappers;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -21,25 +21,25 @@ public static class ExecutionStrategyFactory
 
         await SeedData(repository);
 
-        var metrics = new Metrics();
+        var metricsWriter = new MetricsWriter();
         var metricsStorage = new MetricsStorage();
 
-        var repositoryProxy = CreateRepositoryProxy(repository, metrics);
+        repository = CreateRepositoryProxy(repository, metricsWriter);
 
         var executionType = Settings.ExecutionOptions.ExecutionType;
         System.Console.WriteLine($"Creating ExecutionStrategy with type = {executionType}...");
         return executionType switch
         {
-            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repositoryProxy, metricsStorage,
-                metrics,
+            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repository, metricsStorage,
+                metricsWriter,
                 new IterationExecutionOptions()
                 {
                     DataCount = Settings.Seeding.DataCount,
                     RequestsCount = Settings.ExecutionOptions.Iteration.RequestsCount,
                     UpdateOperationProbable = Settings.ExecutionOptions.UpdateOperationProbable
                 }),
-            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repositoryProxy, metricsStorage,
-                metrics,
+            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repository, metricsStorage,
+                metricsWriter,
                 new RealTimeExecutionOptions()
                 {
                     DataCount = Settings.Seeding.DataCount,
@@ -51,26 +51,24 @@ public static class ExecutionStrategyFactory
         };
     }
 
-    private static IRepository CreateRepositoryProxy(IRepository repository, Metrics metrics)
+    private static IRepository CreateRepositoryProxy(IRepository repository, MetricsWriter metricsWriter)
     {
-        var repositoryTimeMeasurmentProxy = new RepositoryTimeMeasurmentProxy(repository, metrics);
+        repository = new RepositoryMetricsDecorator(repository, metricsWriter);
 
         if (!Settings.CacheOptions.Enabled)
         {
             System.Console.WriteLine("Without cache...");
-            return new RequestTimeMeasurmentRepositoryProxy(repositoryTimeMeasurmentProxy, metrics);
+            return repository;
         }
 
         System.Console.WriteLine("Using cache...");
         var cache = CreateCache(Settings.CacheOptions.CacheType);
-        var cacheWrapper = new CacheWrapper(cache, new DistributedCacheEntryOptions()
+        ICacheWrapper cacheWrapper = new CacheWrapper(cache, new DistributedCacheEntryOptions()
         {
             SlidingExpiration = Settings.CacheOptions.SlidingExpiration
-        }, metrics);
-        var cacheWrapperProxy = new CacheWrapperProxy(cacheWrapper, metrics);
-        var cacheRepositoryProxy = new CacheRepositoryProxy(repositoryTimeMeasurmentProxy, cacheWrapperProxy);
-
-        return new RequestTimeMeasurmentRepositoryProxy(cacheRepositoryProxy, metrics);
+        }, metricsWriter);
+        cacheWrapper = new CacheMetricsDecorator(cacheWrapper, metricsWriter);
+        return new CachedRepositoryDecorator(repository, cacheWrapper);
     }
 
     private static async Task<IRepository> CreateRepository(RepositoryType repositoryType)
@@ -108,7 +106,7 @@ public static class ExecutionStrategyFactory
             case CacheType.Redis:
                 var options = new ConfigurationOptions()
                 {
-                    EndPoints = {Settings.ConnectionStrings.Redis},
+                    EndPoints = { Settings.ConnectionStrings.Redis },
                     AllowAdmin = true
                 };
                 var muxer = ConnectionMultiplexer.Connect(options);

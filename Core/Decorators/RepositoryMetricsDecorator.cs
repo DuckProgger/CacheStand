@@ -2,24 +2,24 @@
 using Core.Metric;
 using Core.Utils;
 
-namespace Core.Proxies;
+namespace Core.Decorators;
 
-public class RepositoryTimeMeasurmentProxy : IRepository
+public class RepositoryMetricsDecorator : IRepository
 {
     private readonly IRepository repository;
-    private readonly Metrics metrics;
+    private readonly MetricsWriter metricsWriter;
 
-    public RepositoryTimeMeasurmentProxy(IRepository repository, Metrics metrics)
+    public RepositoryMetricsDecorator(IRepository repository, MetricsWriter metricsWriter)
     {
         this.repository = repository;
-        this.metrics = metrics;
+        this.metricsWriter = metricsWriter;
     }
     
     public async Task<Entry?> Get(int id)
     {
         var profiler = new Profiler();
         var entry = await repository.Get(id);
-        metrics.RepositoryReadTime = profiler.ElapsedTime;
+        metricsWriter.AddRepositoryReadTime(profiler.ElapsedTime);
         return entry;
     }
 
@@ -32,8 +32,7 @@ public class RepositoryTimeMeasurmentProxy : IRepository
     {
         using var profiler = new Profiler();
         var updatedEntry = await repository.Update(entry);
-        metrics.RepositoryWriteTime = profiler.ElapsedTime;
+        metricsWriter.AddRepositoryWriteTime(profiler.ElapsedTime);
         return updatedEntry;
-        
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Core.Metric;
 
-public class MetricsResult
+public struct MetricsResult
 {
     public TimeSpan TotalRequestTime { get; set; }
     
