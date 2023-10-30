@@ -17,48 +17,50 @@ public static class ExecutionStrategyFactory
 {
     public static async Task<ExecutionStrategy> CreateExecutionStrategy()
     {
-        var repository = await CreateRepository(Settings.RepositoryOptions.RepositoryType);
+        var dataRepository = await CreateDataRepository(Settings.RepositoryOptions.RepositoryType);
 
-        await SeedData(repository);
+        await SeedData(dataRepository);
 
-        var metricsWriter = new MetricsWriter();
-        var metricsStorage = new MetricsStorage();
-
-        repository = CreateRepositoryProxy(repository, metricsWriter);
+        var metricsRepository = new MetricsRepository();
+        dataRepository = CreateDataRepositoryProxy(dataRepository, metricsRepository);
 
         var executionType = Settings.ExecutionOptions.ExecutionType;
         System.Console.WriteLine($"Creating ExecutionStrategy with type = {executionType}...");
         return executionType switch
         {
-            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(repository, metricsStorage,
-                metricsWriter,
+            ExecutionStrategyType.Iteration => new IterationExecutionStrategy(dataRepository,
+                metricsRepository,
                 new IterationExecutionOptions()
                 {
                     DataCount = Settings.Seeding.DataCount,
                     RequestsCount = Settings.ExecutionOptions.Iteration.RequestsCount,
-                    UpdateOperationProbable = Settings.ExecutionOptions.UpdateOperationProbable
+                    UpdateOperationProbable = Settings.ExecutionOptions.UpdateOperationProbable,
+                    MaxBytesDataLength = Settings.Seeding.MaxBytesLength,
+                    MaxStringDataLength = Settings.Seeding.MaxStringLength
                 }),
-            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(repository, metricsStorage,
-                metricsWriter,
+            ExecutionStrategyType.RealTime => new RealTimeExecutionStrategy(dataRepository,
+                metricsRepository,
                 new RealTimeExecutionOptions()
                 {
                     DataCount = Settings.Seeding.DataCount,
                     RequestCycleTime = Settings.ExecutionOptions.RealTime.RequestCycleTimeMs,
                     PresentationCycleTime = Settings.ExecutionOptions.RealTime.PresentationCycleTime,
-                    UpdateOperationProbable = Settings.ExecutionOptions.UpdateOperationProbable
+                    UpdateOperationProbable = Settings.ExecutionOptions.UpdateOperationProbable,
+                    MaxBytesDataLength = Settings.Seeding.MaxBytesLength,
+                    MaxStringDataLength = Settings.Seeding.MaxStringLength
                 }),
             _ => throw new ArgumentOutOfRangeException(nameof(executionType), executionType, null)
         };
     }
 
-    private static IRepository CreateRepositoryProxy(IRepository repository, MetricsWriter metricsWriter)
+    private static IDataRepository CreateDataRepositoryProxy(IDataRepository dataRepository, MetricsRepository metricsRepository)
     {
-        repository = new RepositoryMetricsDecorator(repository, metricsWriter);
+        dataRepository = new DataRepositoryMetricsDecorator(dataRepository, metricsRepository);
 
         if (!Settings.CacheOptions.Enabled)
         {
             System.Console.WriteLine("Without cache...");
-            return repository;
+            return dataRepository;
         }
 
         System.Console.WriteLine("Using cache...");
@@ -66,18 +68,18 @@ public static class ExecutionStrategyFactory
         ICacheWrapper cacheWrapper = new CacheWrapper(cache, new DistributedCacheEntryOptions()
         {
             SlidingExpiration = Settings.CacheOptions.SlidingExpiration
-        }, metricsWriter);
-        cacheWrapper = new CacheMetricsDecorator(cacheWrapper, metricsWriter);
-        return new CachedRepositoryDecorator(repository, cacheWrapper);
+        }, metricsRepository);
+        cacheWrapper = new CacheMetricsDecorator(cacheWrapper, metricsRepository);
+        return new CachedDataRepositoryDecorator(dataRepository, cacheWrapper);
     }
 
-    private static async Task<IRepository> CreateRepository(RepositoryType repositoryType)
+    private static async Task<IDataRepository> CreateDataRepository(RepositoryType repositoryType)
     {
         System.Console.WriteLine($"Create {repositoryType} Repository...");
         switch (repositoryType)
         {
             case RepositoryType.InMemory:
-                return new InMemoryRepository();
+                return new InMemoryDataRepository();
             case RepositoryType.SqLite or RepositoryType.PostgreSql:
                 var dbContext = repositoryType == RepositoryType.PostgreSql
                 ? (ApplicationContext)PostgresContextFactory.CreateDbContext()
@@ -90,7 +92,7 @@ public static class ExecutionStrategyFactory
                 }
                 System.Console.WriteLine("Migrate DB...");
                 await database.MigrateAsync();
-                return new DbRepository(dbContext);
+                return new DbDataRepository(dbContext);
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -122,9 +124,9 @@ public static class ExecutionStrategyFactory
         }
     }
 
-    private static async Task SeedData(IRepository repository)
+    private static async Task SeedData(IDataRepository dataRepository)
     {
-        if (await repository.Get(1) is not null) return;
+        if (await dataRepository.Get(1) is not null) return;
         System.Console.WriteLine("Seed data...");
         var entries = Seed.GetData(new SeedOptions()
         {
@@ -135,6 +137,6 @@ public static class ExecutionStrategyFactory
             MaxBytesLength = Settings.Seeding.MaxBytesLength,
         });
         foreach (var entry in entries)
-            await repository.Create(entry);
+            await dataRepository.Create(entry);
     }
 }

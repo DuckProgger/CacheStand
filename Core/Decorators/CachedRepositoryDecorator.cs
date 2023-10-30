@@ -3,14 +3,14 @@ using Core.Wrappers;
 
 namespace Core.Decorators;
 
-public class CachedRepositoryDecorator : IRepository
+public class CachedDataRepositoryDecorator : IDataRepository
 {
-    private readonly IRepository repository;
+    private readonly IDataRepository dataRepository;
     private readonly ICacheWrapper cacheWrapper;
 
-    public CachedRepositoryDecorator(IRepository repository, ICacheWrapper cacheWrapper)
+    public CachedDataRepositoryDecorator(IDataRepository dataRepository, ICacheWrapper cacheWrapper)
     {
-        this.repository = repository;
+        this.dataRepository = dataRepository;
         this.cacheWrapper = cacheWrapper;
     }
 
@@ -18,21 +18,21 @@ public class CachedRepositoryDecorator : IRepository
     {
         var entryFromCache = await cacheWrapper.GetValueAsync<Entry>(id.ToString());
         if (entryFromCache is not null) return entryFromCache;
-        var entry = await repository.Get(id);
+        var entry = await dataRepository.Get(id);
         await cacheWrapper.SetValueAsync(entry.Id.ToString(), entry);
         return entry;
     }
 
     public async Task<Entry> Create(Entry entry)
     {
-        var createdEntry = await repository.Create(entry);
+        var createdEntry = await dataRepository.Create(entry);
         await cacheWrapper.SetValueAsync(entry.Id.ToString(), createdEntry);
         return createdEntry;
     }
 
     public async Task<Entry> Update(Entry entry)
     {
-        var updatedEntry = await repository.Update(entry);
+        var updatedEntry = await dataRepository.Update(entry);
         await cacheWrapper.SetValueAsync(entry.Id.ToString(), updatedEntry);
         return updatedEntry;
     }

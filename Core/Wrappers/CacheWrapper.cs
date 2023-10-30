@@ -9,24 +9,24 @@ public class CacheWrapper : ICacheWrapper
 {
     private readonly IDistributedCache cache;
     private readonly DistributedCacheEntryOptions options;
-    private readonly MetricsWriter metricsWriter;
+    private readonly MetricsRepository metricsRepository;
 
-    public CacheWrapper(IDistributedCache cache, DistributedCacheEntryOptions options, MetricsWriter metricsWriter)
+    public CacheWrapper(IDistributedCache cache, DistributedCacheEntryOptions options, MetricsRepository metricsRepository)
     {
         this.cache = cache;
         this.options = options;
-        this.metricsWriter = metricsWriter;
+        this.metricsRepository = metricsRepository;
     }
 
     public async Task<TValue?> GetValueAsync<TValue>(string key)
     {
         using var profiler = new Profiler();
         var entryStr = await cache.GetStringAsync(key);
-        metricsWriter.AddCacheReadTime(profiler.ElapsedTime);
+        metricsRepository.AddCacheReadTime(profiler.ElapsedTime);
         if (entryStr is null) return default;
         profiler.Restart();
         var value = JsonConvert.DeserializeObject<TValue>(entryStr);
-        metricsWriter.AddDeserializationTime(profiler.ElapsedTime);
+        metricsRepository.AddDeserializationTime(profiler.ElapsedTime);
         return value;
     }
 
@@ -34,9 +34,9 @@ public class CacheWrapper : ICacheWrapper
     {
         using var profiler = new Profiler();
         var serializedValue = JsonConvert.SerializeObject(value);
-        metricsWriter.AddSerializationTime(profiler.ElapsedTime);
+        metricsRepository.AddSerializationTime(profiler.ElapsedTime);
         profiler.Restart();
         await cache.SetStringAsync(key, serializedValue, options);
-        metricsWriter.AddCacheWriteTime(profiler.ElapsedTime);
+        metricsRepository.AddCacheWriteTime(profiler.ElapsedTime);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Core.Data;
 
-public interface IRepository
+public interface IDataRepository
 {
     public Task<Entry?> Get(int id);
 

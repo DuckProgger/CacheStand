@@ -2,7 +2,7 @@
 
 namespace Core.Metric;
 
-public class MetricsStorage
+internal class MetricsStorage
 {
     private readonly ConcurrentBag<Metrics> metricList = new();
 

@@ -2,7 +2,7 @@
 
 namespace Core.Metric;
 
-public class MetricsCalc
+internal class MetricsCalc
 {
     private readonly List<Metrics> metricList;
 

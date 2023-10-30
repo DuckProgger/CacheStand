@@ -8,10 +8,8 @@ public class RealTimeExecutionStrategy : ExecutionStrategy
 {
     private readonly RealTimeExecutionOptions options;
 
-    public RealTimeExecutionStrategy(IRepository repository,
-        MetricsStorage metricsStorage,
-        MetricsWriter metrics,
-        RealTimeExecutionOptions options) : base(repository, metricsStorage, metrics, options)
+    public RealTimeExecutionStrategy(IDataRepository dataRepository, MetricsRepository metricsRepository,
+        RealTimeExecutionOptions options) : base(dataRepository, metricsRepository, options)
     {
         this.options = options;
     }
@@ -22,7 +20,7 @@ public class RealTimeExecutionStrategy : ExecutionStrategy
 
         var consumerTimer = new SingleThreadTimer(() =>
         {
-            var metricsCalc = new MetricsCalc(metricsStorage.GetAll());
+            var metricsCalc = new MetricsCalc(metricsRepository.GetMetrics());
             var metricsResult = metricsCalc.Calculate(ExecutionStrategyType.RealTime);
             OnResultReceived(metricsResult);
             return Task.CompletedTask;

@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
-public class DbRepository : IRepository
+public class DbDataRepository : IDataRepository
 {
     private readonly ApplicationContext dbContext;
     private readonly DbSet<Entry> dbSet;
-    public DbRepository(ApplicationContext dbContext)
+    public DbDataRepository(ApplicationContext dbContext)
     {
         this.dbContext = dbContext;
         dbSet = dbContext.Set<Entry>();

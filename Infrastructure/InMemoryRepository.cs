@@ -2,7 +2,7 @@
 
 namespace Infrastructure;
 
-public class InMemoryRepository : IRepository
+public class InMemoryDataRepository : IDataRepository
 {
     private readonly Dictionary<int, Entry> entries = new();
     private static int idCount = 0;

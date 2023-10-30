@@ -7,20 +7,20 @@ namespace Core.Decorators;
 public class CacheMetricsDecorator : ICacheWrapper
 {
     private readonly ICacheWrapper cacheWrapper;
-    private readonly MetricsWriter metricsWriter;
+    private readonly MetricsRepository metricsRepository;
 
-    public CacheMetricsDecorator(ICacheWrapper cacheWrapper, MetricsWriter metricsWriter)
+    public CacheMetricsDecorator(ICacheWrapper cacheWrapper, MetricsRepository metricsRepository)
     {
         this.cacheWrapper = cacheWrapper;
-        this.metricsWriter = metricsWriter;
+        this.metricsRepository = metricsRepository;
     }
 
     public async Task<TValue?> GetValueAsync<TValue>(string key)
     {
         using var profiler = new Profiler();
         var entry = await cacheWrapper.GetValueAsync<TValue>(key);
-        metricsWriter.AddCacheCosts(profiler.ElapsedTime);
-        metricsWriter.WriteCacheHit(entry is not null);
+        metricsRepository.AddCacheCosts(profiler.ElapsedTime);
+        metricsRepository.WriteCacheHit(entry is not null);
         return entry;
     }
 
@@ -28,6 +28,6 @@ public class CacheMetricsDecorator : ICacheWrapper
     {
         using var profiler = new Profiler();
         await cacheWrapper.SetValueAsync(key, value);
-        metricsWriter.AddCacheCosts(profiler.ElapsedTime);
+        metricsRepository.AddCacheCosts(profiler.ElapsedTime);
     }
 }

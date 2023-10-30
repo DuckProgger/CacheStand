@@ -6,18 +6,15 @@ namespace Core.ExecutionStrategy;
 
 public abstract class ExecutionStrategy
 {
-    private readonly IRepository repository;
-    private readonly MetricsWriter metricsWriter;
+    private readonly IDataRepository dataRepository;
     private readonly ExecutionOptions options;
-
-    protected readonly MetricsStorage metricsStorage;
-
-    protected ExecutionStrategy(IRepository repository,
-        MetricsStorage metricsStorage, MetricsWriter metricsWriter, ExecutionOptions options)
+    
+    protected readonly MetricsRepository metricsRepository;
+    
+    protected ExecutionStrategy(IDataRepository dataRepository, MetricsRepository metricsRepository, ExecutionOptions options)
     {
-        this.repository = repository;
-        this.metricsStorage = metricsStorage;
-        this.metricsWriter = metricsWriter;
+        this.dataRepository = dataRepository;
+        this.metricsRepository = metricsRepository;
         this.options = options;
     }
 
@@ -40,22 +37,22 @@ public abstract class ExecutionStrategy
         var newEntry = new Entry()
         {
             Id = randomId,
-            Data = Randomizer.GetRandomBytes(10000),
-            Text = Randomizer.GetRandomString(10000)
+            Data = Randomizer.GetRandomBytes(options.MaxBytesDataLength),
+            Text = Randomizer.GetRandomString(options.MaxStringDataLength)
         };
-        metricsWriter.Begin();
-        metricsWriter.WriteIsReadOperation(false);
-        await repository.Update(newEntry);
-        metricsStorage.Add(metricsWriter.EndAndGet());
+        metricsRepository.StartNew();
+        metricsRepository.WriteIsReadOperation(false);
+        await dataRepository.Update(newEntry);
+        metricsRepository.EndWrite();
     }
 
     private async Task ReadOperation()
     {
         var randomId = Randomizer.GetRandomInt(1, options.DataCount);
-        metricsWriter.Begin();
-        metricsWriter.WriteIsReadOperation(true);
-        var entry = await repository.Get(randomId);
-        metricsStorage.Add(metricsWriter.EndAndGet());
+        metricsRepository.StartNew();
+        metricsRepository.WriteIsReadOperation(true);
+        var entry = await dataRepository.Get(randomId);
+        metricsRepository.EndWrite();
     }
 
     protected virtual void OnResultReceived(MetricsResult result)
