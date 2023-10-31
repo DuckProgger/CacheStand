@@ -55,7 +55,11 @@ public static class ExecutionStrategyFactory
 
     private static IDataRepository CreateDataRepositoryProxy(IDataRepository dataRepository, MetricsRepository metricsRepository)
     {
-        dataRepository = new DataRepositoryMetricsDecorator(dataRepository, metricsRepository);
+        dataRepository = new DataRepositoryMetricsDecorator(dataRepository, metricsRepository, 
+            new DataRepositoryMetricsDecoratorOptions()
+            {
+                ReadDelay = Settings.RepositoryOptions.ReadDelay
+            });
 
         if (!Settings.CacheOptions.Enabled)
         {

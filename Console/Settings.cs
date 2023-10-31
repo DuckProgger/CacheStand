@@ -63,6 +63,9 @@ public static class Settings
     public static class RepositoryOptions
     {
         public static RepositoryType RepositoryType => Enum.Parse<RepositoryType>(config["RepositoryOptions:RepositoryType"]!);
+        
+        public static TimeSpan ReadDelay =>
+            TimeSpan.FromMilliseconds(int.Parse(config["RepositoryOptions:ReadDelayMs"]!));
 
         public static bool ClearDatabase => bool.Parse(config["RepositoryOptions:ClearDatabase"]!);
     }

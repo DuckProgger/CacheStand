@@ -26,7 +26,7 @@ public class SingleThreadTimer : IDisposable
                 await callback();
             }
 
-        }, CancellationToken.None);
+        }, cancellationToken);
     }
 
     public void Stop()

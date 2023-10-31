@@ -22,7 +22,6 @@ public class DbDataRepository : IDataRepository
 
     public async Task<Entry?> Get(int id)
     {
-        //await Task.Delay(1);
         dbContext.ChangeTracker.Clear();
         return await Items
             .AsNoTracking()
