@@ -1,4 +1,5 @@
-﻿using Console.Writers;
+﻿using System.Diagnostics;
+using Console.Writers;
 
 namespace Console;
 

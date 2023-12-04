@@ -71,7 +71,7 @@ public static class ExecutionStrategyFactory
         var cache = CreateCache(Settings.CacheOptions.CacheType);
         ICacheWrapper cacheWrapper = new CacheWrapper(cache, new DistributedCacheEntryOptions()
         {
-            SlidingExpiration = Settings.CacheOptions.SlidingExpiration
+            AbsoluteExpirationRelativeToNow = Settings.CacheOptions.SlidingExpiration
         }, metricsRepository);
         cacheWrapper = new CacheMetricsDecorator(cacheWrapper, metricsRepository);
         return new CachedDataRepositoryDecorator(dataRepository, cacheWrapper);

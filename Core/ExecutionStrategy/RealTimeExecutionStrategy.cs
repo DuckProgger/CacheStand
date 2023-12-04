@@ -27,8 +27,9 @@ public class RealTimeExecutionStrategy : ExecutionStrategy
         }, options.PresentationCycleTime);
 
         var cts = new CancellationTokenSource();
-        var simulationTask = requestSimulationTimer.Start(cts.Token).CancelOnFaulted(cts);
-        var consumerTask = consumerTimer.Start(cts.Token).CancelOnFaulted(cts);
-        await Task.WhenAll(simulationTask, consumerTask);
+        var simulationTask = requestSimulationTimer.Start(cts.Token);
+        var consumerTask = consumerTimer.Start(cts.Token);
+        var completedTask = await Task.WhenAny(simulationTask, consumerTask);
+        await completedTask;
     }
 }

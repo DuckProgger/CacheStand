@@ -8,9 +8,9 @@ public abstract class ExecutionStrategy
 {
     private readonly IDataRepository dataRepository;
     private readonly ExecutionOptions options;
-    
+
     protected readonly MetricsRepository metricsRepository;
-    
+
     protected ExecutionStrategy(IDataRepository dataRepository, MetricsRepository metricsRepository, ExecutionOptions options)
     {
         this.dataRepository = dataRepository;
@@ -21,7 +21,7 @@ public abstract class ExecutionStrategy
     public event Action<MetricsResult>? ResultReceived;
 
     public abstract Task Invoke();
-    
+
     protected async Task SimulateRequest()
     {
         var updateOperation = Randomizer.GetProbableEvent(options.UpdateOperationProbable);
@@ -30,7 +30,7 @@ public abstract class ExecutionStrategy
         else
             await ReadOperation();
     }
-    
+
     private async Task UpdateOperation()
     {
         var randomId = Randomizer.GetRandomInt(1, options.DataCount);
